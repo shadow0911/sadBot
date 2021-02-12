@@ -1,0 +1,12 @@
+{
+    "default_prefix": ">",
+    "default_settings":{
+        "prefix": ">",
+        "deleteMsgLog": "message-logs",
+        "actionLogChannel": "action-logs",
+        "adminLogChannel": "admin-logs",
+        "welcomechannel": "welcome",
+        "ModRole": "moderator",
+        "AdminRole": "admin"
+    }
+}
