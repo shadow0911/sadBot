@@ -1,4 +1,5 @@
 {
+    "mongoPath":"mongodb+srv://sadBot:DJsMm8gIRzsNREdY@discordbot.zgj3l.mongodb.net/sadBot?retryWrites=true&w=majority",
     "default_prefix": ">",
     "default_settings":{
         "prefix": ">",

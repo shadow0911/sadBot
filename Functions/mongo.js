@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const mongoPath  = 'mongodb+srv://sadBot:DJsMm8gIRzsNREdY@discordbot.zgj3l.mongodb.net/sadBot?retryWrites=true&w=majority'
+const { mongoPath }  = require("../config.json")
 
 module.exports = {
   init: () => {
