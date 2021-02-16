@@ -1,5 +1,5 @@
 module.exports = {
     Guild: require('./server_settings'),
     Status: require('./stauts'),
-    MuteDataBase: require('./modLogsSchema')
+    MuteDataBase: require('./modLogsSchema'),
 };

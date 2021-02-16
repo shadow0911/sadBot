@@ -23,7 +23,7 @@ module.exports = client =>{
                const memberID = member.get(userID)
 
                const muteRole = guild.roles.cache.find(role =>{
-                   return role.name === "Muted" || "muted"
+                   return role.name === "Muted"
                })
 
                memberID.roles.remove(muteRole.id)
