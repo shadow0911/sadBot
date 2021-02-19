@@ -4,7 +4,7 @@ require('dotenv').config();
 const fs = require('fs');
 
 require('./Functions/functions')(client)
-client.config = require('./config.json')
+//client.config = require('./config.json')
 client.mongoose = require('./Functions/mongo')
 
 let prefix = '>';

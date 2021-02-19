@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const { mongoPath }  = require("../config.json")
+const mongoPath  = process.env.MONGOPATH
 
 module.exports = {
   init: () => {
