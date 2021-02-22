@@ -15,34 +15,39 @@ module.exports = {
             return message.channel.send({embed: new Discord.MessageEmbed()
             .setAuthor(`${message.guild.name} - Moderation commands`)
             .addField('Moderators', [
-                "Mute",
-                "Unmute",
-                "warn",
-                "kick",
-                "purge",
-                "clean",
-                "setnick",
-                "custom-command",
-                "end-report"
+                `\`\`\`- Mute`,
+                "- Unmute",
+                "- warn",
+                "- purge",
+                "- clean",
+                "- setnick",
+                "- custom-command",
+                "- end-report",
+                `- status`,
+                `- Disconnect\`\`\``
             ], true)
             .addField('Mod+', [
-                "Disconnect",
-                "lock",
-                "unlock",
-                "ban",
+                `\`\`\`- lock`,
+                "- unlock",
+                "- kick",
+                `- Ban\`\`\``,
             ], true)
             .addField('Managers', [
-                "event-create",
-                "event-end",
+                `\`\`\`- event-create`,
+                "- event-end",
+                "- Delete-log",
+                `- Edit-log\`\`\``
             ], true)
             .addField('Admin', [
-                "create-channel",
-                "delete-channel",
-                "embed(disabled)",
-                "force-remove-status",
-                "move-channel",
-                "update-member",
-                "reset-role"
+                `\`\`\`- create-channel`,
+                `- delete-channel`,
+                `- embed(disabled)`,
+                `- remove-status`,
+                `- move-channel`,
+                `- reset-role`,
+                `- say`,
+                `- dm`,
+                `- reset-role\`\`\``
             ], true)
             .setFooter('>help-mod (command), e.g >help-mod mute')
             .setColor(message.guild.me.displayColor)

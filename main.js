@@ -3,6 +3,7 @@ const client = new Discord.Client();
 require('dotenv').config();
 const fs = require('fs');
 
+
 require('./Functions/functions')(client)
 const mongo = require('./Functions/mongo')
 

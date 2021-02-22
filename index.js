@@ -2,12 +2,11 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 require('dotenv').config();
 const fs = require('fs');
+const { Guild } = require('./models')
 
 require('./Functions/functions')(client)
-//client.config = require('./config.json')
+client.config = require('./config.json')
 client.mongoose = require('./Functions/mongo')
-
-let prefix = '>';
 
 client.commands = new Discord.Collection();
 client.aliases = new Discord.Collection();
@@ -46,7 +45,8 @@ fs.readdir("./clientEvents/", (err, files) => {
   });
 });
 
-const muteData = require('./clientEvents/checkMuteDatabase')
+const muteData = require('./clientEvents/checkMuteDatabase');
+const { config } = require('process');
 client.on('ready', async() => {
   client.user.setActivity("😟Recording a video for sabbir")
   console.log(`working in sabbir official sad😔`)
@@ -54,7 +54,9 @@ client.on('ready', async() => {
   })
 
 client.on('message', async message =>{
+  let settings = await Guild.findOne({guildID: message.guild.id})
 
+  const prefix = settings ? settings.prefix : config.default_prefix
   if(!message.content.startsWith(prefix)) return
   if(!prefix) return
 

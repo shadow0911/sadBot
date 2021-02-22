@@ -142,14 +142,14 @@ module.exports = {
         if(!logChannel) return false
 
         message.guild.channels.cache.get(logChannel.actionLogChannel).send({embed: new Discord.MessageEmbed()
-            .setAuthor('Action: Mute',`${muteMember.user.avatarURL({
+            .setAuthor('Command executed MUTE',`${muteMember.user.avatarURL({
                 dynamic: false , format: 'png'
             }
             )}`)
-            .addField('User:', `\`\`\`${muteMember.user.tag}\`\`\``, true)
-            .addField('Moderator:', `\`\`\`${message.author.tag}\`\`\``, true)
-            .addField('Time:', `\`\`\`${ms(ms(time))}\`\`\``, true)
-            .addField('Reason:', `\`\`\`${muteReason}\`\`\``)
+            .addField('User', `\`\`\`${muteMember.user.tag}\`\`\``, true)
+            .addField('Moderator', `\`\`\`${message.author.tag}\`\`\``, true)
+            .addField('Time', `\`\`\`${ms(ms(time))}\`\`\``, true)
+            .addField('Reason', `\`\`\`${muteReason}\`\`\``)
             .setFooter(`${muteMember.id}`)
             .setTimestamp()
             .setColor("#fc5947")

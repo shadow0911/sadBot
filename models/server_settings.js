@@ -11,6 +11,7 @@ const serverSchema = mongoose.Schema({
     actionLogChannel: String,
     adminLogChannel: String,
     welcomechannel: String,
+    ModAction: String,
     ModRole: String,
     AdminRole: String
 })

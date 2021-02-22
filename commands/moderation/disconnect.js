@@ -1,5 +1,6 @@
 const Discord = require('discord.js');
 const ms = require('ms')
+const { Guild } = require('../../models')
 module.exports = {
     name: 'disconnect',
     aliases: ['dc'],
@@ -16,19 +17,27 @@ module.exports = {
 
         if(voiceMember.permissions.has("ADMINISTRATOR")) return message.channel.send('Sorry i can\'t disconnect this user')
 
-        voiceMember.voice.kick(['Diconnected by a moderator']);
+        voiceMember.voice.kick([`SadBot disconnect command - used by ${message.author.tag}`]);
 
-        await message.channel.send(`${voiceMember.user.tag} has been disconnected`)
+        await message.channel.send({embed: new Discord.MessageEmbed()
+        .setDescription(`${voiceMember.user.tag} has been disconnected`)
+        .setColor(message.guild.me.displayColor)
+        })
 
-        message.guild.channels.cache.get('777068832946257922').send({embed: new Discord.MessageEmbed()
-            .setAuthor('Action: Disconnect',`${voiceMember.user.avatarURL({
+        let Settings = await Guild.findOne({
+            guildID: message.guild.id
+        })
+
+        message.guild.channels.cache.get(Settings.ModAction).send({embed: new Discord.MessageEmbed()
+            .setAuthor('Command executed DISCONNECT',`${voiceMember.user.avatarURL({
                 dynamic: true , format: 'png'
             }
             )}`)
-            .addField('User:', `${voiceMember.user}`, true)
-            .addField('Moderator:', `${message.author}`, true)
+            .addField('User', `\`\`\`${voiceMember.tag || voiceMember.user.tag}\`\`\``, true)
+            .addField('Moderator', `\`\`\`${message.author.tag}\`\`\``, true)
+            .setFooter(`${voiceMember.id}`)
             .setTimestamp()
-            .setColor('#42f563')
+            .setColor(message.guild.me.displayColor)
         })
     }
 }

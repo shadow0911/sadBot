@@ -1,9 +1,12 @@
 module.exports = {
-    name: 'slice',
+    name: 'split',
     description: 'ping pong',
     category: 'utils',
     run: async(client, message, args)=> {
-        let Msg = "what a great --test day to die "
-        message.channel.send(Msg.split("", 4).join(" "))
+            let Msg = message.content.split(/,\s+/)
+            let slice = Msg.content.split('-author').join(' ')
+            message.replace('-author', 'display')
+            message.channel.send(slice)
+        
     }
 }

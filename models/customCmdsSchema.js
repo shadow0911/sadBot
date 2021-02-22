@@ -5,7 +5,6 @@ const commandsSchema = mongoose.Schema({
     Active: Boolean,
     guildID: String,
     guildName: String,
-    userName: String,
     key: String,
     content: String,
     Embed: Boolean,

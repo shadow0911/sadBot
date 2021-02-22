@@ -14,6 +14,7 @@ module.exports = {
         let findActionChannel = message.guild.channels.cache.find(c => c.id == data.actionLogChannel)
         let findAdminChannel = message.guild.channels.cache.find(c => c.id == data.adminLogChannel)
         let findWelcomeChannel = message.guild.channels.cache.find(c => c.id == data.welcomechannel)
+        let findModAction = message.guild.channels.cache.find(c => c.id == data.ModAction)
         if(!args.length){
             let settingsEmbed = new MessageEmbed()
 
@@ -22,7 +23,8 @@ module.exports = {
             .addField('Message-logs', `\`\`\`${findMsgChannel.name}\`\`\``, true) 
             .addField('Action-logs', `\`\`\`${findActionChannel.name}\`\`\``, true)
             .addField('Admin-logs', `\`\`\`${findAdminChannel.name}\`\`\``, true) 
-            .addField('Members-log', `\`\`\`${findWelcomeChannel.name}\`\`\``, true) 
+            .addField('Members-log', `\`\`\`${findWelcomeChannel.name}\`\`\``, true)
+            .addField('Mod-Actions', `\`\`\`${findModAction.name}\`\`\``, true) 
             .addField('Moderator-role', `\`\`\`${data.ModRole.name}\`\`\``, true) 
             .addField('Admin-role', `\`\`\`${data.AdminRole.name}\`\`\``, true) 
             .setFooter(`${prefix}settings [field name] to change the settings`)
@@ -43,27 +45,26 @@ module.exports = {
                 let MSG = await message.channel.send(prefixEmbed)
 
                 const filter = (m) => {
-                    if(m.author.id !== message.author.id){
-                        return false
-                    }
-                    if(m.content.toLowerCase() == 'cancel'){
-                        message.channel.send('❎canceled command').then(m => m.delete({timeout: 5000}))
-                        return false;
-                    }
+                    return m.author.id === message.author.id
                 };
 
                 const prefixCollector = message.channel.createMessageCollector(filter, { max: 1});
                 prefixCollector.on('collect', async(collected) =>{
-                    await client.updateGuild(message.guild, {prefix: collected.content})
+                    if(collected.content.toLowerCase() == 'cancel'){
+                        message.channel.send('❎canceled command').then(m => m.delete({timeout: 5000}))
+                        prefixCollector.stop();
+                    }else {
+                        await client.updateGuild(message.guild, {prefix: collected.content})
 
-                    const prefixData = await Guild.findOne({guildID: message.guild.id})
-
-                    let finalEmbed = new MessageEmbed()
-                    .setAuthor(`${message.guild.name} - Settings`)
-                    .setDescription(`Prefix has been updated`)
-                    .addField('Prefix', `\`\`\`${prefixData.prefix}\`\`\``)
-
-                    await MSG.edit(finalEmbed)
+                        const prefixData = await Guild.findOne({guildID: message.guild.id})
+    
+                        let finalEmbed = new MessageEmbed()
+                        .setAuthor(`${message.guild.name} - Settings`)
+                        .setDescription(`Prefix has been updated`)
+                        .addField('Prefix', `\`\`\`${prefixData.prefix}\`\`\``)
+    
+                        await MSG.edit(finalEmbed)
+                    }
                 })
 
                 prefixCollector.on('end', async(collected) =>{
@@ -71,7 +72,7 @@ module.exports = {
             }
             break;
 
-            case 'message-logs':{
+            case 'message-log':{
                 let msgLogEmbed = new MessageEmbed()
                 .setAuthor(`${message.guild.name} - Settings`)
                 .setDescription(`Ping the channel you want to set it as message log channel.`)
@@ -115,7 +116,7 @@ module.exports = {
             }
             break;
 
-            case 'action-logs':{
+            case 'action-log':{
                 let actionLogEmbed = new MessageEmbed()
                 .setAuthor(`${message.guild.name} - Settings`)
                 .setDescription(`Ping the channel you want to set it as Action log channel.`)
@@ -160,7 +161,7 @@ module.exports = {
             }
             break;
 
-            case 'admin-logs':{
+            case 'admin-log':{
                 let adminLogEmbed = new MessageEmbed()
                 .setAuthor(`${message.guild.name} - Settings`)
                 .setDescription(`Ping the channel you want to set it as Admin log channel.`)
@@ -248,6 +249,50 @@ module.exports = {
                 msgChannelCollector.on('end', async(collected) =>{
                 })
             }
+            break;
+
+            case 'mod-action':{
+                let msgLogEmbed = new MessageEmbed()
+                    .setAuthor(`${message.guild.name} - Settings`)
+                    .setDescription(`Ping the channel you want to set it as mod action log channel.`)
+                    .addField('Mod-Actions', `\`\`\`${findModAction.name}\`\`\``)
+                    .setFooter(`\`cancel\` to end the command`)
+                let MSG = await message.channel.send(msgLogEmbed)
+            
+                const channelfilter = async(newMsg) => {
+            
+                    if(newMsg.content.toLowerCase() == 'cancel'){
+                        return message.channel.send('❎canceled command').then(m => m.delete({timeout: 5000}))
+                    }
+                    let channelid = await newMsg.content.slice(2, 20)
+                        let channel = await message.guild.channels.cache.find(c => c.id == channelid)
+                            if(!channel){
+                                return message.channel.send("This isn't a valid channel. Please ping a valid channel").then(m => m.delete({timeout: 5000}))
+                            }
+            
+                            await client.updateGuild(message.guild, {ModAction: channel.id})
+            
+                            return newMsg.author.id == message.author.id
+            
+                            };
+            
+                            const msgChannelCollector = message.channel.createMessageCollector(channelfilter, {max: 1});
+            
+                msgChannelCollector.on('collect', async(collected) =>{
+                    const actionData = await Guild.findOne({guildID: message.guild.id})
+                    let chanName = message.guild.channels.cache.find(c => c.id == actionData.ModAction )
+            
+                    let delEndEmbed = new MessageEmbed()
+                            .setAuthor(`${message.guild.name} - Settings`)
+                            .setDescription(`Message Log channel has been updated`)
+                            .addField('Message Logs', `\`\`\`${chanName.name}\`\`\``)
+            
+                            await MSG.edit(delEndEmbed)
+                        })
+            
+                        msgChannelCollector.on('end', async(collected) =>{
+                        })
+                    }
             break;
         }
 
