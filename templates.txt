@@ -1,0 +1,333 @@
+const Discord = require('discord.js');
+const { Guild} = require('../../models')
+const { MessageEmbed } = require('discord.js')
+module.exports = {
+    name: 'settings',
+    run: async(client, message, args) =>{
+
+        if(!message.member.permissions.has("ADMINISTRATOR")){
+            return
+        }
+        const filter = async (m) => {
+            return m.content.toLowerCase() && m.author.id == message.author.id
+        };
+
+        const data = await Guild.findOne({
+            guildID: message.guild.id, 
+            Active: true
+        })
+
+        function findFromLogsObject (channelNames){
+            var channelObject = data.LogsChannels ? data.LogsChannels : null
+            if(channelObject.hasOwnProperty(channelNames)){
+                return channelObject[channelNames]
+            }else {
+                return console.log(`${channelNames} doesn't exist`)
+            }
+        }
+
+        let msgLogs = message.guild.channels.cache.find(c => c.id == findFromLogsObject('messageLogs'))
+        const entries = Object.entries(data.LogsChannels)
+
+        const Embed = new MessageEmbed()
+        .setAuthor(`${message.guild.name} - Settings`)
+        .setFooter(`settings [field name] to change the settings`)
+        if(!args.length){
+            for (const [logChannel, channelID] of entries) {
+                objectLogChannels = message.guild.channels.cache.find(c => c.id == channelID)
+
+                Embed.addField(`${logChannel}`, `\`\`\`${objectLogChannels ? objectLogChannels.name : 'NONE'}\`\`\``, true) 
+            }
+            message.channel.send(Embed)
+            return false;
+        }
+        const {prefix} = data
+
+        let cmd = args.shift().toLowerCase()
+
+        switch(cmd){
+            case 'update': {
+                message.channel.send('started...')
+                const collector = message.channel.createMessageCollector(filter);
+
+                collector.on('collect', async (collected) =>{
+
+                // PREFIX SETUP
+
+                if(collected.content.includes("prefix:")){
+                    let keyValue = collected.content.split(" ")[1]
+
+                    let key = await Guild.findOneAndUpdate({
+                        guildID: message.guild.id,
+                    },{
+                        prefix: keyValue,
+                        guildID: message.guild.id,
+                        guildName: message.guild.name,
+                    },{
+                        upsert: true
+                    }).catch(err => console.log(err))
+                    await message.channel.send({embed: new Discord.MessageEmbed()
+                        .setDescription(`Prefix set to - ${prefix}`)
+                    })
+
+                    
+                }
+
+                // MESSAGE LOGS
+                
+                if(collected.content.includes("message-logs")){
+                    let messageLogsArray = collected.content.split(" ")[1]
+                    let mentionMessageChannel = MemberLogs.replace('<#','').replace('>','')
+               
+                    const messageLogs = message.guild.channels.cache.find(c => c.id == mentionMessageChannel) 
+                    || message.guild.channels.cache.find(c => c.name == messageLogsArray) || 
+                    message.guild.channels.cache.find(c => c.id == messageLogsArray)
+
+                    if(!messageLogs){
+                        return message.channel.send({embed: new Discord.MessageEmbed()
+                            .setDescription(`Please type a channel name to set it as Member-logs channel`)
+                        })
+                    }
+
+                    await Guild.findOneAndUpdate({
+                        guildID: message.guild.id,
+                        Active: true
+                    },{
+                        Active: true,
+                        $set: { 
+                            'messageLogs.memberLogs' : messageLogs
+                        },
+                        guildID: message.guild.id,
+                        guildName: message.guild.name,
+                    },{
+                        upsert: true
+                    }).then(async () =>{
+                            await message.channel.send({embed: new Discord.MessageEmbed()
+                                .setDescription(`Message-logs channel set to - ${messageLogs} `)
+                            })
+                    }).catch(err => console.log(err))
+                    
+                }
+
+                // MEMBER LOGS
+
+                if(collected.content.includes("member-logs")){
+                    let MemberLogs = collected.content.split(" ")[1]
+                    let mentionedMemberChannel = MemberLogs.replace('<#','').replace('>','')
+               
+                    const MemberChannels = message.guild.channels.cache.find(c => c.id == mentionedMemberChannel) 
+                    || message.guild.channels.cache.find(c => c.name == MemberLogs) || 
+                    message.guild.channels.cache.find(c => c.id == MemberLogs)
+
+                    if(!MemberChannels){
+                        return message.channel.send({embed: new Discord.MessageEmbed()
+                            .setDescription(`Please type a channel name to set it as Member-logs channel`)
+                        })
+                    }
+
+                    await Guild.findOneAndUpdate({
+                        guildID: message.guild.id,
+                        Active: true
+                    },{
+                        Active: true,
+                        $set: { 
+                            'LogsChannels.memberLogs' : MemberChannels
+                        },
+                        guildID: message.guild.id,
+                        guildName: message.guild.name,
+                    },{
+                        upsert: true
+                    }).then(async () =>{
+                            await message.channel.send({embed: new Discord.MessageEmbed()
+                                .setDescription(`Member-logs channel set to - ${MemberChannels} `)
+                            })
+                    }).catch(err => console.log(err))
+                    
+                }
+
+                // INFRACTION LOGS
+
+                if(collected.content.includes("infraction-logs")){
+                    let infractionLogsArray = collected.content.split(" ")[1]
+                    let infractionLogsID = infractionLogsArray.replace('<#','').replace('>','')
+               
+                    const infractionLogs = message.guild.channels.cache.find(c => c.id == infractionLogsID) || 
+                    message.guild.channels.cache.find(c => c.name == infractionLogsArray) || 
+                    message.guild.channels.cache.find(c => c.id == infractionLogsArray)
+
+                    if(!infractionLogs){
+                        return message.channel.send({embed: new Discord.MessageEmbed()
+                            .setDescription(`Please type a channel name to set it as infraction-action-logs channel`)
+                        })
+                    }
+
+                    await Guild.findOneAndUpdate({
+                        guildID: message.guild.id,
+                        Active: true
+                    },{
+                        Active: true,
+                        $set: { 
+                            'messageLogs.infractionLogs' : infractionLogs
+                        },
+                        guildID: message.guild.id,
+                        guildName: message.guild.name,
+                    },{
+                        upsert: true
+                    }).then(async () =>{
+                            await message.channel.send({embed: new Discord.MessageEmbed()
+                                .setDescription(`Moderator-action-logs channel set to - ${infractionLogs} `)
+                            })
+                    }).catch(err => console.log(err))
+                    
+                }
+
+                // MODERATOR LOGS
+
+                if(collected.content.includes("moderator-logs")){
+                    let moderationLogsArray = collected.content.split(" ")[1]
+                    let moderationLogsID = moderationLogsArray.replace('<#','').replace('>','')
+               
+                    const moderationLogs = message.guild.channels.cache.find(c => c.id == moderationLogsID) || 
+                    message.guild.channels.cache.find(c => c.name == moderationLogsArray) || 
+                    message.guild.channels.cache.find(c => c.id == moderationLogsArray)
+
+                    if(!moderationLogs){
+                        return message.channel.send({embed: new Discord.MessageEmbed()
+                            .setDescription(`Please type a channel name to set it as Moderator-logs channel`)
+                        })
+                    }
+
+                    await Guild.findOneAndUpdate({
+                        guildID: message.guild.id,
+                        Active: true
+                    },{
+                        Active: true,
+                        $set: { 
+                            'messageLogs.moderationLogs' : moderationLogs
+                        },
+                        guildID: message.guild.id,
+                        guildName: message.guild.name,
+                    },{
+                        upsert: true
+                    }).then(async () =>{
+                            await message.channel.send({embed: new Discord.MessageEmbed()
+                                .setDescription(`Moderator-logs channel set to - ${infractionLogs} `)
+                            })
+                    }).catch(err => console.log(err))
+                    
+                }
+
+                // ADMIN LOGS
+
+                if(collected.content.includes("admin-logs")){
+                    let adminLogsArray = collected.content.split(" ")[1]
+                    let adminLogsID = adminLogsArray.replace('<#','').replace('>','')
+               
+                    const administrativeLogs = message.guild.channels.cache.find(c => c.id == adminLogsID) || 
+                    message.guild.channels.cache.find(c => c.name == adminLogsArray) || 
+                    message.guild.channels.cache.find(c => c.id == adminLogsArray)
+
+                    if(!administrativeLogs){
+                        return message.channel.send({embed: new Discord.MessageEmbed()
+                            .setDescription(`Please type a channel name to set it as Admin-logs channel`)
+                        })
+                    }
+
+                    await Guild.findOneAndUpdate({
+                        guildID: message.guild.id,
+                        Active: true
+                    },{
+                        Active: true,
+                        $set: { 
+                            'messageLogs.administrativeLogs' : administrativeLogs
+                        },
+                        guildID: message.guild.id,
+                        guildName: message.guild.name,
+                    },{
+                        upsert: true
+                    }).then(async () =>{
+                            await message.channel.send({embed: new Discord.MessageEmbed()
+                                .setDescription(`Admin-logs channel set to - ${administrativeLogs} `)
+                            })
+                    }).catch(err => console.log(err))
+                    
+                }
+
+                // MANAGER LOGS
+
+                if(collected.content.includes("manager-logs")){
+                    let managerArray = collected.content.split(" ")[1]
+                    let managerLogsID = managerArray.replace('<#','').replace('>','')
+               
+                    const managerLogs = message.guild.channels.cache.find(c => c.id == managerLogsID) || 
+                    message.guild.channels.cache.find(c => c.name == managerArray) || 
+                    message.guild.channels.cache.find(c => c.id == managerArray)
+
+                    if(!managerLogs){
+                        return message.channel.send({embed: new Discord.MessageEmbed()
+                            .setDescription(`Please type a channel name to set it as Manager-logs channel`)
+                        })
+                    }
+
+                    await Guild.findOneAndUpdate({
+                        guildID: message.guild.id,
+                        Active: true
+                    },{
+                        Active: true,
+                        $set: { 
+                            'messageLogs.managersLogs' : managerLogs
+                        },
+                        guildID: message.guild.id,
+                        guildName: message.guild.name,
+                    },{
+                        upsert: true
+                    }).then(async () =>{
+                            await message.channel.send({embed: new Discord.MessageEmbed()
+                                .setDescription(`Manager-logs channel set to - ${managerLogs} `)
+                            })
+                    }).catch(err => console.log(err))
+                    
+                }
+
+                // COMMAND LOGS
+
+                if(collected.content.includes("command-logs")){
+                    let commandArray = collected.content.split(" ")[1]
+                    let commandLogsID = commandArray.replace('<#','').replace('>','')
+               
+                    const commandLogs = message.guild.channels.cache.find(c => c.id == commandLogsID) || 
+                    message.guild.channels.cache.find(c => c.name == commandArray) || 
+                    message.guild.channels.cache.find(c => c.id == commandArray)
+
+                    if(!commandLogs){
+                        return message.channel.send({embed: new Discord.MessageEmbed()
+                            .setDescription(`Please type a channel name to set it as Command-logs channel`)
+                        })
+                    }
+
+                    await Guild.findOneAndUpdate({
+                        guildID: message.guild.id,
+                        Active: true
+                    },{
+                        Active: true,
+                        $set: { 
+                            'messageLogs.commandLogs' : commandLogs
+                        },
+                        guildID: message.guild.id,
+                        guildName: message.guild.name,
+                    },{
+                        upsert: true
+                    }).then(async () =>{
+                            await message.channel.send({embed: new Discord.MessageEmbed()
+                                .setDescription(`Command-logs channel set to - ${commandLogs} `)
+                            })
+                    }).catch(err => console.log(err))
+                    
+                }
+
+            })
+        }
+        break;
+    }
+    }
+}

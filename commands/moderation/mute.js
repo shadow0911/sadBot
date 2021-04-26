@@ -1,8 +1,6 @@
 const Discord = require('discord.js');
 const ms = require('ms')
-const { MuteDataBase } = require('../../models')
-const { Guild } = require('../../models')
-
+const { MuteDataBase, Guild, ModProfile } = require('../../models')
 
 module.exports = {
     name: 'mute',
@@ -142,10 +140,7 @@ module.exports = {
         if(!logChannel) return false
 
         message.guild.channels.cache.get(logChannel.actionLogChannel).send({embed: new Discord.MessageEmbed()
-            .setAuthor('Command executed MUTE',`${muteMember.user.avatarURL({
-                dynamic: false , format: 'png'
-            }
-            )}`)
+            .setAuthor('A MUTE HAS BEEN DETECTED')
             .addField('User', `\`\`\`${muteMember.user.tag}\`\`\``, true)
             .addField('Moderator', `\`\`\`${message.author.tag}\`\`\``, true)
             .addField('Time', `\`\`\`${ms(ms(time))}\`\`\``, true)
@@ -153,6 +148,6 @@ module.exports = {
             .setFooter(`${muteMember.id}`)
             .setTimestamp()
             .setColor("#fc5947")
-            }) 
+        }) 
     }
 }

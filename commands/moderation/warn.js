@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const ms = require('ms')
 const { MuteDataBase } = require('../../models')
 const { Guild } = require('../../models')
+const moment = require('moment')
 
 
 module.exports = {
@@ -46,120 +47,54 @@ module.exports = {
         let warnReason = args.slice(1).join(' ')
         if(!warnReason.toLowerCase().startsWith("don't") && !warnReason.toLowerCase().startsWith("please")){
             return message.channel.send({embed: new Discord.MessageEmbed()
-            .setDescription("Sorry this is not a valid way to warn someone, Please start the message with Don't/Please")
+            .setDescription("Sorry this is not valid way to warn, Please use valid way to warn. e.g: Don't/Please [reason]")
+            .setColor(message.guild.me.displayColor)
             }).then(m => m.delete({timeout: 5000}))
         }
-        console.log(warnReason)
 
-        // const previosMute = await MuteDataBase.find({
-        //     userID: muteMember.id
-        // })
+        await message.channel.send(`${warnMember} ${warnReason}`)
 
-        // const currentlyMuted = previosMute.filter(mute => {
-        //     return mute.isMuted === true
-        // })
-
-        // if (currentlyMuted.length){
-        //     message.channel.send({embed: new Discord.MessageEmbed()
-        //     .setDescription( `${muteMember.user.username} is already Muted`)
-        //     .setColor('FF0000')
-        //     }).then(me => {
-        //         me.delete({timeout: 5000})
-        //     })
-        // }
-
-        // let time = args[1]
         
-        // if(!time){
-        //     return await message.channel.send(muteEmbed).then(m=>m.delete({timeout: 5000}))
-        // }
-
-        // let muteLength = ms(time)
-        
-        // const irlTime = new Date()
-
-        // irlTime.setMilliseconds(irlTime.getMilliseconds() + muteLength)
-
-        // let muteRole = await message.guild.roles.cache.find(r => r.name === 'Muted' && 'muted')
-        // if(!muteRole){
-        //     await message.guild.roles.create({
-        //         data: {
-        //             name: 'Muted',
-        //             color: '#000000',
-        //             permissions: []
-        //         },
-        //         reason: 'sadBot mute role creation'
-        //     })
-
-        //     await message.guild.channels.cache.forEach(channel => {
-        //         channel.overwritePermissions([
-        //             {
-        //                 id: muteRole.id,
-        //                 deny : ['SEND_MESSAGES', 'ADD_REACTIONS'],
-        //             }
-        //         ], "Muted role overWrites")
-        //     })
-        // }
-
-        // if(muteMember.roles.cache.has(muteRole.id)){
-        //     return message.channel.send({embed: new Discord.MessageEmbed()
-        //     .setDescription(`**${muteMember.user.tag}** is already Muted`)
-        //     .setColor("#fc5947")
-        //     }).then(m =>m.delete({timeout: 5000}))
-        // } else{
-        //     muteMember.roles.add(muteRole.id)
-        //     message.channel.send({embed: new Discord.MessageEmbed()
-        //     .setDescription(`**${muteMember.user.tag}** is now muted | ${muteReason}`)
-        //     .setColor("#45f766")
-        //     }).then(m =>m.delete({timeout: 10000}))
-        // }
-
-        // function makeid() {
-        //     var text = "";
-        //     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        function genID() {
+            var text = "";
+            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
           
-        //     for (var i = 0; i <= 10; i++)
-        //       text += possible.charAt(Math.floor(Math.random() * possible.length));
+            for (var i = 0; i < 10; i++)
+              text += possible.charAt(Math.floor(Math.random() * possible.length));
           
-        //     return text;
-        // }
+            return text;
+        }
 
-        // const TodayDate = new Date()
+        let Time = new Date()
 
-        // let muteLog = await new MuteDataBase({
-        //     caseID: makeid(),
-        //     Action: 'Mute',
-        //     guildID: message.guild.id,
-        //     guildName: message.guild.name,
-        //     userName: muteMember.user.tag,
-        //     userID: muteMember.id,
-        //     Reason: muteReason,
-        //     Moderator: message.author.tag,
-        //     expire: irlTime,
-        //     isMuted: true,
-        //     Date: `${TodayDate}`,
-        //     timestamps: message.createdAt
-        // })
-        // muteLog.save().catch(err => console.log(err))
+        await new MuteDataBase({
+            caseID: genID(),
+            Action: 'warn',
+            guildID: message.guild.id,
+            guildName: message.guild.name,
+            userName: warnMember.user.tag,
+            userID: warnMember.id,
+            Reason: warnReason,
+            Moderator: message.author.tag,
+            Date: Time,
+            timestamps: message.createdAt
+        }).save().catch(err => console.log(err))
 
-        // let logChannel = await Guild.findOne({
-        //     guildID: message.guild.id
-        // })
+        let logChannel = await Guild.findOne({
+            guildID: message.guild.id
+        })
 
-        // if(!logChannel) return false
+        if(!logChannel) return false
 
-        // message.guild.channels.cache.get(logChannel.actionLogChannel).send({embed: new Discord.MessageEmbed()
-        //     .setAuthor('Action: Mute',`${muteMember.user.avatarURL({
-        //         dynamic: false , format: 'png'
-        //     }
-        //     )}`)
-        //     .addField('User:', `\`\`\`${muteMember.user.tag}\`\`\``, true)
-        //     .addField('Moderator:', `\`\`\`${message.author.tag}\`\`\``, true)
-        //     .addField('Time:', `\`\`\`${ms(ms(time))}\`\`\``, true)
-        //     .addField('Reason:', `\`\`\`${muteReason}\`\`\``)
-        //     .setFooter(`${muteMember.id}`)
-        //     .setTimestamp()
-        //     .setColor("#fc5947")
-        //     }) 
+        message.guild.channels.cache.get(logChannel.actionLogChannel).send({embed: new Discord.MessageEmbed()
+            .setAuthor('A WARN HAS BEEN DETECTED')
+            .addField('User', `\`\`\`${warnMember.user.tag}\`\`\``, true)
+            .addField('Moderator', `\`\`\`${message.author.tag}\`\`\``, true)
+            .addField('Date', `\`\`\`${moment(message.createdAt).format('MMMM Do YYYY, h:mm:ss a')}\`\`\``, true)
+            .addField('Reason', `\`\`\`${warnReason}\`\`\``)
+            .setFooter(`${warnMember.id}`)
+            .setTimestamp()
+            .setColor("#fc5947")
+            }) 
     }
 }

@@ -2,14 +2,14 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const { readdirSync } = require("fs");
 
-const ascii = require("ascii-table");
+const ascii = require("ascii-table"); // - npm i ascii-table required*
 
-let table = new ascii("Commands");
-table.setHeading("Command", "Load status");
+let table = new ascii("Commands"); // Put any name
+table.setHeading("Command", "Load status"); // You can change, but this one is better
 
 module.exports = client => {
 
-  readdirSync("./commands/").forEach(dir => {
+  readdirSync("./commands/").forEach(dir => { // Locate your folder that has all the commands
 
     const commands = readdirSync(`./commands/${dir}/`).filter(file =>
       file.endsWith(".js")

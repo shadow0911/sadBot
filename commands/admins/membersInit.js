@@ -1,27 +1,28 @@
 const Discord = require('discord.js')
 const fs = require('fs')
 module.exports = {
-    name: 'forbidden-cmd-One',
-    description:'cleans an amount of chat',
-    category: 'moderation',
-    usage:'clean 100',
+    name: 'role-members',
+
     run: async(client, message, args,prefix) =>{
         if(!message.member.permissions.has("ADMINISTRATOR")){
             return
         }
+        let roleArgs = message.content.split(" ").slice(1)
 
-        let roleName = message.content.split(" ").slice(1).join(" ");
+        let role = message.mentions.roles.first() || 
+        message.guild.roles.cache.find(r => r.name == roleArgs.join(" ")) || 
+        message.guild.roles.cache.find(r => r.id == args[0]);
 
-        let membersWithRole = message.guild.members.cache.filter(member => { 
-            return member.roles.cache.get("625210556860596255");
-        }).map(member => {
-            return member.user.tag;
-        })
-
-        let Embed = new Discord.MessageEmbed()
-        .setAuthor(`Members in ${roleName}`)
-        .setDescription(membersWithRole.join('\n'));
-
-        message.channel.send(Embed)
+        if(!role) return message.reply('that role does not exist!');
+        let arr = new Array();
+        role.members.forEach(user => {
+            arr.push(`${user}`);
+        });
+        const embed = new Discord.MessageEmbed()
+        embed.setAuthor(`Members in ${role.name}`)
+        embed.setDescription(arr.join('\n'))
+        embed.setFooter(`Total - ${arr.length} members`)
+        
+        message.channel.send(embed);
     }
 }

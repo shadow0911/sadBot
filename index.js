@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const client = new Discord.Client();
+const client = new Discord.Client({disableMentions: 'everyone' });
 require('dotenv').config();
 const fs = require('fs');
 const { Guild } = require('./models')
@@ -16,7 +16,7 @@ client.aliases = new Discord.Collection();
 });
 
 
-fs.readdir('./events/', (err, files) => { // We use the method readdir to read what is in the events folder
+fs.readdir('./events/', (err, files) => { // use the method readdir to read what is in the events folder
     if (err) return console.error(err); // If there is an error during the process to read all contents of the ./events folder, throw an error in the console
     files.forEach(file => {
         const eventFunction = require(`./events/${file}`); // Here we require the event file of the events folder
@@ -46,12 +46,22 @@ fs.readdir("./clientEvents/", (err, files) => {
 });
 
 const muteData = require('./clientEvents/checkMuteDatabase');
+const welcome = require('./clientEvents/welcome');
+const banDetection = require('./clientEvents/banDetection');
+const kickDetection = require('./clientEvents/kickDetection');
+const guildConfig = require('./clientEvents/guildCreate');
+const AfkTimeout = require('./clientEvents/afkTimeout');
 const { config } = require('process');
 client.on('ready', async() => {
   client.user.setActivity("😟Recording a video for sabbir")
   console.log(`working in sabbir official sad😔`)
   muteData(client)
-  })
+  banDetection(client)
+  welcome(client)
+  kickDetection(client)
+  guildConfig(client)
+  AfkTimeout(client)
+})
 
 client.on('message', async message =>{
   let settings = await Guild.findOne({guildID: message.guild.id})

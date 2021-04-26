@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
 const fs = require('fs')
-const { Status } = require('../../models')
+const { ModProfile } = require('../../models')
 const moment = require('moment')
 module.exports = {
     name: 'status',
@@ -14,15 +14,53 @@ module.exports = {
             return false;
         }
 
-        const reason = args.slice(0).join(' ')
+        const reason = args.slice(0).join(' ');
+        const date = new Date().toLocaleString();
+        const Embed = new Discord.MessageEmbed();
 
-        const DB = await Status.findOne({
-            guildID: message.guild.id, 
+        async function statusData(value, msg, dateToday){
+            await ModProfile.findOneAndUpdate({
+                guildID: message.guild.id, 
+                userID: message.author.id
+            }, {
+                userName: message.author.tag,
+                Status: value,
+                statusMessage: msg,
+                statusTime: dateToday
+            }, {
+                upsert: true
+            })
+        }
+
+        const database = await ModProfile.findOne({
+            guildID: message.guild.id,
             userID: message.author.id
         })
-        let Embed = new Discord.MessageEmbed()
 
-        if(!DB && !reason){
+        if(!database ){
+            statusData(true, reason ? reason : null, date)
+
+            Embed.setAuthor(`${message.author.tag}`, message.author.avatarURL({
+                dynamic: true , type: 'png'}))
+            Embed.setDescription(`> ${reason}`)
+            moment(Embed.setTimestamp()).format("LL")
+            Embed.setColor(message.guild.me.displayColor)
+
+            await message.channel.send(Embed)
+        }else if(!args.length && database.Status == true){ 
+
+            statusData(false, null, date)
+
+            Embed.setAuthor(`${message.author.tag}`, message.author.avatarURL({
+                dynamic: true , type: 'png'}))
+            Embed.setDescription('> Your status has been removed')
+            moment(Embed.setTimestamp()).format("LL")
+            Embed.setColor(message.guild.me.displayColor)
+    
+            await message.channel.send(Embed)
+
+            return false;
+        }else if(!args.length && database.Status == false){
             Embed.setAuthor(`${client.user.displayName} - Status`)
             Embed.setDescription('Sets a custom afk status, so if anyone pings you then the message shows to them')
             Embed.addFields(
@@ -38,76 +76,15 @@ module.exports = {
 
             message.channel.send(Embed)
 
-            return false;
+        }else if(database.Status == false){
+            statusData(true, reason ? reason : null, date)
 
-        }else if(DB.Enabled === false && !reason){
-            Embed.setAuthor(`${client.user.username} - Status`)
-            Embed.setDescription('Sets a custom afk status, so if anyone pings you and the message shows to them')
-            Embed.addFields(
-                {
-                    name: 'Usage', value: `${prefix}status [Your message]`,
-                },
-                {
-                    name: 'Example', value: `${prefix}status Busy atm. Ping another mod`
-                }
-            )
-            Embed.setFooter("Don't set Troll status")
+            Embed.setAuthor(`${message.author.tag}`, message.author.avatarURL({
+                dynamic: true , type: 'png'}))
+            Embed.setDescription(`> ${reason}`)
+            moment(Embed.setTimestamp()).format("LL")
             Embed.setColor(message.guild.me.displayColor)
 
-            message.channel.send(Embed)
-
-            return false;
-        }else if(!DB){
-            new Status({
-                guildID: message.guild.id,
-                guildName: message.guild.name,
-                userID: message.author.id,
-                userName: message.author.tag,
-                Enabled: true,
-                Message: reason,
-                Time: new Date()
-            }).save()
-
-            await Embed.setAuthor(`${message.author.tag}`, message.author.avatarURL({
-                dynamic: true , type: 'png'}))
-            await Embed.setDescription(`> ${reason}`)
-            await moment(Embed.setTimestamp()).format("LL")
-            await Embed.setColor(message.guild.me.displayColor)
-        
-            await message.channel.send(Embed)
-                
-            
-        }else if(DB && DB.Enabled == false){
-            await Status.findOneAndUpdate({
-                guildID: message.guild.id, 
-                userID: message.author.id
-            },{
-                Enabled: true,
-                Message: reason
-            })
-
-            await Embed.setAuthor(`${message.author.tag}`, message.author.avatarURL({
-                dynamic: true , type: 'png'}))
-            await Embed.setDescription(`> ${reason}`)
-            await moment(Embed.setTimestamp()).format("LL")
-            await Embed.setColor(message.guild.me.displayColor)
-    
-            await message.channel.send(Embed)
-
-        }else if(DB && DB.Enabled == true){
-            await Status.findOneAndUpdate({
-                guildID: message.guild.id, 
-                userID: message.author.id
-            },{
-                Enabled: false,
-                Message: null
-            })
-            await Embed.setAuthor(`${message.author.tag}`, message.author.avatarURL({
-                dynamic: true , type: 'png'}))
-            await Embed.setDescription('> Your status has been removed')
-            await moment(Embed.setTimestamp()).format("LL")
-            await Embed.setColor(message.guild.me.displayColor)
-    
             await message.channel.send(Embed)
         }
     }

@@ -25,30 +25,57 @@ module.exports = (client, message) =>{
                const muteRole = guild.roles.cache.find(role =>{
                    return role.name === "Muted"
                })
+               if(!memberID){
+                  await MuteDataBase.findOneAndUpdate({
+                   guildID: guildID,
+                   userID: userID,
+                   isMuted: true
+                 },{
+                   isMuted: false
+                 })
+                 return false
+               }
                if(muteRole){
                    memberID.roles.remove(muteRole.id)
                }else {
-                   return console.log("The user don't have the mute role")
+                 await console.log(`${guild.name} don't have muted role`)
                }
 
+               let unMuteEmbed = {
+                color: "#03fc4e",
+                author: {
+                    name: "SADBOT UNMUTE",
+                },
+                fields: [
+                    {
+                        name: 'User',
+                        value: `\`\`\`${memberID.user.tag}\`\`\``,
+                        inline: true
+                    },
+                    {
+                        name: 'Moderator',
+                        value: `\`\`\`${client.user.tag}\`\`\``,
+                        inline: true
+                    },
+                    {
+                        name: 'Reason for Unmute',
+                        value: `\`\`\`[ AUTO ]\`\`\``
+                    },
+    
+                ],
+                timestamp: new Date(),
+                footer: {
+                    text: `${memberID.user.id}`
+                }
+    
+            }
 
-                let logChannel = await Guild.findOne({
-                    guildID: guildID
-                })
-                if(!logChannel) return false
+            let logChannel = await Guild.findOne({
+                guildID: guildID
+            })
+            if(!logChannel) return false
 
-                guild.channels.cache.get(logChannel.actionLogChannel).send({embed: new Discord.MessageEmbed()
-                    .setAuthor('Muke has been revoked',`${memberID.user.avatarURL({
-                        dynamic: false , format: 'png'
-                    }
-                )}`)
-                .addField('User', `\`\`\`${memberID.user.tag}\`\`\``, true)
-                .addField('Moderator', `\`\`\`${client.user.tag}\`\`\``, true)
-                .addField('Reason', `\`\`\`sadBot auto mute\`\`\``)
-                .setFooter(`${memberID.id}`)
-                .setTimestamp()
-                .setColor("#03fc4e")
-                })
+            guild.channels.cache.get(logChannel.actionLogChannel).send({embed: unMuteEmbed})
            }
         }
 
@@ -65,8 +92,8 @@ module.exports = (client, message) =>{
         const { guild, id} = member
 
         const muteEvade = await MuteDataBase.findOne({
-            userID: id,
-            guildID: guild,
+            userID: member.id,
+            guildID: guild.id,
             isMuted: true
         })
 
@@ -107,15 +134,41 @@ module.exports = (client, message) =>{
         })
         if(!logChannel) return false
 
-        guild.channels.cache.get(logChannel.actionLogChannel).send({embed: new Discord.MessageEmbed()
-        .setAuthor('Auto-mute')
-        .addField('User:', `\`\`\`${member.user.tag}\`\`\``, true)
-        .addField('Moderator:', `\`\`\`${client.user.tag}\`\`\``, true)
-        .addField('Reason:', `\`\`\`SadBot mute evade detection [ Manual muted ]\`\`\``)
-        .setFooter(`${member.user.id}`)
-        .setTimestamp()
-        .setColor("#fc5947")
-        })
+        let logEmbed = {
+            color: "#fc5947",
+            author: {
+                name: "SADBOT AUTO MUTE",
+            },
+            fields: [
+                {
+                    name: 'User',
+                    value: `\`\`\`${member.user.tag}\`\`\``,
+                    inline: true
+                },
+                {
+                    name: 'Moderator',
+                    value: `\`\`\`${client.user.tag}\`\`\``,
+                    inline: true
+                },
+                {
+                    name: 'Duration',
+                    value: `\`\`\`∞\`\`\``,
+                    inline: true
+                },
+                {
+                    name: 'Reason for Mute',
+                    value: `\`\`\`SadBot mute evade detection [ Manual muted ]\`\`\``
+                },
+
+            ],
+            timestamp: new Date(),
+            footer: {
+                text: `${member.user.id}`
+            }
+
+        }
+
+        guild.channels.cache.get(logChannel.actionLogChannel).send({embed: logEmbed})
             }else {
                 return console.log(`${guild} don't have muted role`)
             }

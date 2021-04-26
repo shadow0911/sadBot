@@ -1,299 +1,222 @@
 const Discord = require('discord.js');
-const { Guild } = require('../../models')
+const { Guild} = require('../../models')
 const { MessageEmbed } = require('discord.js')
 module.exports = {
-    name: 'settings',
-    run: async(client, message, args,prefix) =>{
+    name: 'setup',
+    run: async(client, message, args, prefix) =>{
 
         if(!message.member.permissions.has("ADMINISTRATOR")){
             return
         }
 
-        const data = await Guild.findOne({guildID: message.guild.id})
-        let findMsgChannel = message.guild.channels.cache.find(c => c.id == data.deleteMsgLog)
-        let findActionChannel = message.guild.channels.cache.find(c => c.id == data.actionLogChannel)
-        let findAdminChannel = message.guild.channels.cache.find(c => c.id == data.adminLogChannel)
-        let findWelcomeChannel = message.guild.channels.cache.find(c => c.id == data.welcomechannel)
-        let findModAction = message.guild.channels.cache.find(c => c.id == data.ModAction)
+        const data = await Guild.findOne({
+            guildID: message.guild.id, 
+            Active: true
+        }) // Database
+
+        const entries = Object.entries(data.LogsChannels) // Finding the object from database
+        const ErrorsEmbed = new MessageEmbed() // New message Embed if any error occures
+
+        const Embed = new MessageEmbed() // Message embed
+        .setAuthor(`${message.guild.name} - Settings`)
+        .setFooter(`settings [field name] to change the settings`)
+        .setColor(message.guild.me.displayColor)
+
+        const adminRoleArr = []
+        data.AdminRole.forEach(rolesID =>{
+            let searchForAdmin = message.guild.roles.cache.find(r => r.id == rolesID)
+            adminRoleArr.push(searchForAdmin.toString())
+        })
+        const modRoleArr = []
+        data.ModRole.forEach(rolesID =>{
+            let searchForMod = message.guild.roles.cache.find(r => r.id == rolesID)
+            modRoleArr.push(searchForMod.toString())
+        })          
+        
+        Embed.addField(`Admins`, adminRoleArr.length ? `${adminRoleArr.join(',')}` : 'NONE')
+        Embed.addField(`Moderators`, modRoleArr.length ? `${modRoleArr.join(',')}` : 'NONE')
+
+    
+        const channelArr = new Array(); // Array of Moderator roles
+        for (const [logChannel, channelID] of entries) {
+            let objectLogChannels = message.guild.channels.cache.find(c => c.id == channelID)
+            channelArr.push(`**${logChannel}** - ${objectLogChannels ? objectLogChannels : 'NONE'}`)
+        }
+        Embed.addField("Log Channels", `${channelArr.join(',\n')}`)
+
         if(!args.length){
-            let settingsEmbed = new MessageEmbed()
-
-            .setAuthor(`${message.guild.name} - Settings`)
-            .addField('Prefix', `\`\`\`${data.prefix}\`\`\``, true) 
-            .addField('Message-logs', `\`\`\`${findMsgChannel.name}\`\`\``, true) 
-            .addField('Action-logs', `\`\`\`${findActionChannel.name}\`\`\``, true)
-            .addField('Admin-logs', `\`\`\`${findAdminChannel.name}\`\`\``, true) 
-            .addField('Members-log', `\`\`\`${findWelcomeChannel.name}\`\`\``, true)
-            .addField('Mod-Actions', `\`\`\`${findModAction.name}\`\`\``, true) 
-            .addField('Moderator-role', `\`\`\`${data.ModRole.name}\`\`\``, true) 
-            .addField('Admin-role', `\`\`\`${data.AdminRole.name}\`\`\``, true) 
-            .setFooter(`${prefix}settings [field name] to change the settings`)
-
-            message.channel.send(settingsEmbed)
+            message.channel.send(Embed) // IF [2]nd argument is missing, send flat embed
             return false;
         }
 
-        let cmd = args.shift().toLowerCase()
+        async function configOfGuilds(key, value) {
+            await Guild.findOneAndUpdate({
+                guildID: message.guild.id,
+                Active: true
+            },{
+                [key]: value,
+                guildID: message.guild.id,
+                guildName: message.guild.name,
+            },{
+                upsert: true
+            })
+
+            await message.channel.send({embed: new MessageEmbed()
+                .setDescription(`${key} set to ${value}`)
+            })
+            // Flat funtion fo Prefix
+        }
+
+        async function channelOptions (Channels, key){
+            const logChannels = message.guild.channels.cache.find(c => c.id == Channels.replace('<#','').replace('>','')) || 
+            message.guild.channels.cache.find(c => c.name == Channels) || 
+            message.guild.channels.cache.find(c => c.id == Channels)
+
+            if(!logChannels){
+                return message.channel.send({embed: new Discord.MessageEmbed()
+                    .setDescription(`Ping/Type channel name/ID to set it as log channel`)
+                })
+            }else {
+                await Guild.findOneAndUpdate({
+                    guildID: message.guild.id,
+                    Active: true
+                },{
+                    Active: true,
+                    guildID: message.guild.id,
+                    guildName: message.guild.name,
+                    $set: {
+                        [`LogsChannels.${key}`]: logChannels.id,
+                        [`EnableDisable.${key}`]: true
+                    }
+                },{
+                    upsert: true
+                })
+
+                await message.channel.send({embed: new MessageEmbed()
+                    .setDescription(`${logChannels} set for ${key}`)
+                })
+            }
+            // Fucntion for log channels
+        }
+
+        async function rolesOption (Roles, key, roleName){
+            let roleSet = new Set(Roles)
+                        
+            roleSet.forEach(async rolename => {
+                const roles = message.guild.roles.cache.find(c => c.id == rolename.replace('<@&','').replace('>','')) || 
+                message.guild.roles.cache.find(r => r.name.toLowerCase() == rolename.toLowerCase()) || 
+                message.guild.roles.cache.find(c => c.id == rolename)
+
+                if(!roles){
+                    return message.channel.send(`Couldn't find ${Roles}`)
+                }else {
+                    await Guild.findOneAndUpdate({
+                        guildID: message.guild.id,
+                        Active: true
+                    },{
+                        Active: true,
+                        guildID: message.guild.id,
+                        guildName: message.guild.name,
+                        $addToSet: {
+                            [key]: roles,
+                        }
+                    },{
+                        upsert: true
+                    })
+                }
+                // Function for roles
+            })
+        }
+
+        let cmd = args[0].toLowerCase()
+
+        const logChannelsOfConfig = message.content.split(" ")[2]
+        if(!logChannelsOfConfig){
+            ErrorsEmbed.setDescription(`Missing \`channel\` arguments \n**Usage:**\n ${prefix}settings [logs-channel] [channel] \n**Example**\n${prefix}settings mod-logs #mod-actions \n${prefix}settings admin-logs 12345678901234567`)
+            return message.channel.send(ErrorsEmbed)
+        }
 
         switch(cmd){
-            case'prefix':{
-                let prefixEmbed = new MessageEmbed()
-                .setAuthor(`${message.guild.name} - Settings`)
-                .setDescription(`If you want to change the prefix, type the new prefix in chat`)
-                .addField('Prefix', `\`\`\`${data.prefix}\`\`\``)
-                .setFooter(`\`cancel\` to end the command`)
-                let MSG = await message.channel.send(prefixEmbed)
+            case 'prefix':
+                    let keyValue = message.content.split(" ")[2]
+                    configOfGuilds('prefix', keyValue)
+                    
+                break;
+                
+            case 'mod-roles':
+                let valueOfMod = message.content.split(" ").slice(2).join(" ")
+                let modRoleValue = valueOfMod.split(/,\s+/)
 
-                const filter = (m) => {
-                    return m.author.id === message.author.id
-                };
+                rolesOption(modRoleValue, 'ModRole')
+                
+                await message.channel.send(Embed)
+                break;
 
-                const prefixCollector = message.channel.createMessageCollector(filter, { max: 1});
-                prefixCollector.on('collect', async(collected) =>{
-                    if(collected.content.toLowerCase() == 'cancel'){
-                        message.channel.send('❎canceled command').then(m => m.delete({timeout: 5000}))
-                        prefixCollector.stop();
-                    }else {
-                        await client.updateGuild(message.guild, {prefix: collected.content})
+            case 'admin-roles':
+                let valueOfAdmin = message.content.split(" ").slice(2).join(" ")
+                let adminRoleValue = valueOfAdmin.split(/,\s+/)
 
-                        const prefixData = await Guild.findOne({guildID: message.guild.id})
-    
-                        let finalEmbed = new MessageEmbed()
-                        .setAuthor(`${message.guild.name} - Settings`)
-                        .setDescription(`Prefix has been updated`)
-                        .addField('Prefix', `\`\`\`${prefixData.prefix}\`\`\``)
-    
-                        await MSG.edit(finalEmbed)
-                    }
-                })
+                rolesOption(adminRoleValue, 'AdminRole')
 
-                prefixCollector.on('end', async(collected) =>{
-                })
-            }
-            break;
+                await message.channel.send(Embed)
+                break;
 
-            case 'message-log':{
-                let msgLogEmbed = new MessageEmbed()
-                .setAuthor(`${message.guild.name} - Settings`)
-                .setDescription(`Ping the channel you want to set it as message log channel.`)
-                .addField('Message-Logs', `\`\`\`${findMsgChannel.name}\`\`\``)
-                .setFooter(`\`cancel\` to end the command`)
-                let MSG = await message.channel.send(msgLogEmbed)
+            case 'message-logs':
 
-                const channelfilter = async(newMsg) => {
+                channelOptions(logChannelsOfConfig, 'messageLogs' )
+                break;
 
-                    if(newMsg.content.toLowerCase() == 'cancel'){
-                        return message.channel.send('❎canceled command').then(m => m.delete({timeout: 5000}))
-                    }
-                    let channelid = await newMsg.content.slice(2, 20)
-                    let channel = await message.guild.channels.cache.find(c => c.id == channelid)
-                    if(!channel){
-                        return message.channel.send("This isn't a valid channel. Please ping a valid channel").then(m => m.delete({timeout: 5000}))
-                    }
+            case 'action-logs':
 
-                    await client.updateGuild(message.guild, {deleteMsgLog: channel.id})
+                channelOptions(logChannelsOfConfig, 'infractionLogs' )
+                break;
+            case 'join-logs':
 
-                    return newMsg.author.id == message.author.id
+                channelOptions(logChannelsOfConfig, 'joinLogs' )
+                break;
+            case 'leave-logs':
 
-                };
+                channelOptions(logChannelsOfConfig, 'leaveLogs' )
+                break;
 
-                const msgChannelCollector = message.channel.createMessageCollector(channelfilter, {max: 1});
+            case 'command-logs':
 
-                msgChannelCollector.on('collect', async(collected) =>{
-                    const delMsgData = await Guild.findOne({guildID: message.guild.id})
-                    let chanName = message.guild.channels.cache.find(c => c.id == delMsgData.deleteMsgLog )
+                channelOptions(logChannelsOfConfig, 'commandLogs' )
+                break;
 
-                    let delEndEmbed = new MessageEmbed()
-                    .setAuthor(`${message.guild.name} - Settings`)
-                    .setDescription(`Message Log channel has been updated`)
-                    .addField('Message Logs', `\`\`\`${chanName.name}\`\`\``)
+            case 'voice-logs':
 
-                    await MSG.edit(delEndEmbed)
-                })
+                channelOptions(logChannelsOfConfig, 'voiceLogs' )
+                break;
 
-                msgChannelCollector.on('end', async(collected) =>{
-                })
-            }
-            break;
+            case 'user-logs':
 
-            case 'action-log':{
-                let actionLogEmbed = new MessageEmbed()
-                .setAuthor(`${message.guild.name} - Settings`)
-                .setDescription(`Ping the channel you want to set it as Action log channel.`)
-                .addField('Action-Logs', `\`\`\`${findActionChannel.name}\`\`\``)
-                .setFooter(`\`cancel\` to end the command`)
-                let MSG = await message.channel.send(actionLogEmbed)
+                channelOptions(logChannelsOfConfig, 'userLogs' )
+                break;
 
-                const actionfilter = async(newMsg) => {
+            case 'channel-logs':
 
-                    if(newMsg.content.toLowerCase() == 'cancel'){
-                        return await message.channel.send('❎canceled command').then(m => m.delete({timeout: 5000}))
-                    }
-                    let channelid = await newMsg.content.slice(2, 20)
-                    let channel = await message.guild.channels.cache.find(c => c.id == channelid)
-                    if(!channel){
-                        return await message.channel.send("This isn't a valid channel. Please ping a valid channel").then(m => m.delete({timeout: 5000}))
-                    }
+                channelOptions(logChannelsOfConfig, 'channelsLogs' )
+                break;
 
-                    await client.updateGuild(message.guild, {actionLogChannel: channel.id})
+            case 'server-logs':
 
-                    return newMsg.author.id == message.author.id
+                channelOptions(logChannelsOfConfig, 'serverUpdateLogs' )
+                break;
+            case 'mod-logs':
 
-                };
+                channelOptions(logChannelsOfConfig, 'moderationLogs' )
+                break;
 
-                const msgChannelCollector = message.channel.createMessageCollector(actionfilter, {max: 1});
+            case 'admin-logs':
 
-                msgChannelCollector.on('collect', async(collected) =>{
+                channelOptions(logChannelsOfConfig, 'administrativeLogs' )
+                break;
 
-                    const actionData = await Guild.findOne({guildID: message.guild.id})
-                    let chanName = message.guild.channels.cache.find(c => c.id == actionData.actionLogChannel)
+            case 'welcome-channel':
 
-                    let actionEndEmbed = new MessageEmbed()
-                    .setAuthor(`${message.guild.name} - Settings`)
-                    .setDescription(`Action Log channel has been updated`)
-                    .addField('Action Logs', `\`\`\`${chanName.name}\`\`\``)
-
-                    await MSG.edit(actionEndEmbed)
-                })
-
-                msgChannelCollector.on('end', async(collected) =>{
-                })
-            }
-            break;
-
-            case 'admin-log':{
-                let adminLogEmbed = new MessageEmbed()
-                .setAuthor(`${message.guild.name} - Settings`)
-                .setDescription(`Ping the channel you want to set it as Admin log channel.`)
-                .addField('Admin-Logs', `\`\`\`${findAdminChannel.name}\`\`\``)
-                .setFooter(`\`cancel\` to end the command`)
-                let MSG = await message.channel.send(adminLogEmbed)
-
-                const adminLogfilter = async(newMsg) => {
-
-                    if(newMsg.content.toLowerCase() == 'cancel'){
-                        return await message.channel.send('❎canceled command').then(m => m.delete({timeout: 5000}))
-                    }
-                    let channelid = await newMsg.content.slice(2, 20)
-                    let channel = await message.guild.channels.cache.find(c => c.id == channelid)
-                    if(!channel){
-                        return await message.channel.send("This isn't a valid channel. Please ping a valid channel").then(m => m.delete({timeout: 5000}))
-                    }
-
-                    await client.updateGuild(message.guild, {adminLogChannel: channel.id})
-
-                    return newMsg.author.id == message.author.id
-
-                };
-
-                const msgChannelCollector = message.channel.createMessageCollector(adminLogfilter, {max: 1});
-
-                msgChannelCollector.on('collect', async(collected) =>{
-
-                    const actionData = await Guild.findOne({guildID: message.guild.id})
-                    let chanName = message.guild.channels.cache.find(c => c.id == actionData.adminLogChannel)
-
-                    let adminEndEmbed = new MessageEmbed()
-                    .setAuthor(`${message.guild.name} - Settings`)
-                    .setDescription(`Admin Log channel has been updated`)
-                    .addField('Admin-Logs', `\`\`\`${chanName.name}\`\`\``)
-
-                    await MSG.edit(adminEndEmbed)
-                })
-
-                msgChannelCollector.on('end', async(collected) =>{
-                })
-            }
-            break;
-
-            case 'member-log':{
-                let welcomeEmbed = new MessageEmbed()
-                .setAuthor(`${message.guild.name} - Settings`)
-                .setDescription(`Ping the channel you want to set it as Members-log  channel.`)
-                .addField('Members-log', `\`\`\`${findWelcomeChannel.name}\`\`\``)
-                .setFooter(`\`cancel\` to end the command`)
-                let MSG = await message.channel.send(welcomeEmbed)
-
-                const memberfilter = async(newMsg) => {
-
-                    if(newMsg.content.toLowerCase() == 'cancel'){
-                        return await message.channel.send('❎canceled command').then(m => m.delete({timeout: 5000}))
-                    }
-                    let channelid = await newMsg.content.slice(2, 20)
-                    let channel = await message.guild.channels.cache.find(c => c.id == channelid)
-                    if(!channel){
-                        return await message.channel.send("This isn't a valid channel. Please ping a valid channel").then(m => m.delete({timeout: 5000}))
-                    }
-
-                    await client.updateGuild(message.guild, {welcomechannel: channel.id})
-
-                    return newMsg.author.id == message.author.id
-
-                };
-
-                const msgChannelCollector = message.channel.createMessageCollector(memberfilter, {max: 1});
-
-                msgChannelCollector.on('collect', async(collected) =>{
-
-                    const actionData = await Guild.findOne({guildID: message.guild.id})
-                    let chanName = message.guild.channels.cache.find(c => c.id == actionData.welcomechannel)
-
-                    let memberLogEmbed = new MessageEmbed()
-                    .setAuthor(`${message.guild.name} - Settings`)
-                    .setDescription(`Member-log channel has been updated`)
-                    .addField('Member-logs', `\`\`\`${chanName.name}\`\`\``)
-
-                    await MSG.edit(memberLogEmbed)
-                })
-
-                msgChannelCollector.on('end', async(collected) =>{
-                })
-            }
-            break;
-
-            case 'mod-action':{
-                let msgLogEmbed = new MessageEmbed()
-                    .setAuthor(`${message.guild.name} - Settings`)
-                    .setDescription(`Ping the channel you want to set it as mod action log channel.`)
-                    .addField('Mod-Actions', `\`\`\`${findModAction.name}\`\`\``)
-                    .setFooter(`\`cancel\` to end the command`)
-                let MSG = await message.channel.send(msgLogEmbed)
-            
-                const channelfilter = async(newMsg) => {
-            
-                    if(newMsg.content.toLowerCase() == 'cancel'){
-                        return message.channel.send('❎canceled command').then(m => m.delete({timeout: 5000}))
-                    }
-                    let channelid = await newMsg.content.slice(2, 20)
-                        let channel = await message.guild.channels.cache.find(c => c.id == channelid)
-                            if(!channel){
-                                return message.channel.send("This isn't a valid channel. Please ping a valid channel").then(m => m.delete({timeout: 5000}))
-                            }
-            
-                            await client.updateGuild(message.guild, {ModAction: channel.id})
-            
-                            return newMsg.author.id == message.author.id
-            
-                            };
-            
-                            const msgChannelCollector = message.channel.createMessageCollector(channelfilter, {max: 1});
-            
-                msgChannelCollector.on('collect', async(collected) =>{
-                    const actionData = await Guild.findOne({guildID: message.guild.id})
-                    let chanName = message.guild.channels.cache.find(c => c.id == actionData.ModAction )
-            
-                    let delEndEmbed = new MessageEmbed()
-                            .setAuthor(`${message.guild.name} - Settings`)
-                            .setDescription(`Message Log channel has been updated`)
-                            .addField('Message Logs', `\`\`\`${chanName.name}\`\`\``)
-            
-                            await MSG.edit(delEndEmbed)
-                        })
-            
-                        msgChannelCollector.on('end', async(collected) =>{
-                        })
-                    }
-            break;
+                channelOptions(logChannelsOfConfig, 'welcomeChannel' )
+                break;
         }
 
     }

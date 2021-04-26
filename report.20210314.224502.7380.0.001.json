@@ -1,0 +1,160 @@
+
+{
+  "header": {
+    "reportVersion": 1,
+    "event": "Allocation failed - JavaScript heap out of memory",
+    "trigger": "FatalError",
+    "filename": "report.20210314.224502.7380.0.001.json",
+    "dumpEventTime": "2021-03-14T22:45:02Z",
+    "dumpEventTimeStamp": "1615740302932",
+    "processId": 7380,
+    "cwd": "D:\\sadbot",
+    "commandLine": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "index.js"
+    ],
+    "nodejsVersion": "v12.16.1",
+    "wordSize": 64,
+    "arch": "x64",
+    "platform": "win32",
+    "componentVersions": {
+      "node": "12.16.1",
+      "v8": "7.8.279.23-node.31",
+      "uv": "1.34.0",
+      "zlib": "1.2.11",
+      "brotli": "1.0.7",
+      "ares": "1.15.0",
+      "modules": "72",
+      "nghttp2": "1.40.0",
+      "napi": "5",
+      "llhttp": "2.0.4",
+      "http_parser": "2.9.3",
+      "openssl": "1.1.1d",
+      "cldr": "35.1",
+      "icu": "64.2",
+      "tz": "2019c",
+      "unicode": "12.1"
+    },
+    "release": {
+      "name": "node",
+      "lts": "Erbium",
+      "headersUrl": "https://nodejs.org/download/release/v12.16.1/node-v12.16.1-headers.tar.gz",
+      "sourceUrl": "https://nodejs.org/download/release/v12.16.1/node-v12.16.1.tar.gz",
+      "libUrl": "https://nodejs.org/download/release/v12.16.1/win-x64/node.lib"
+    },
+    "osName": "Windows_NT",
+    "osRelease": "10.0.18362",
+    "osVersion": "Windows 10 Pro",
+    "osMachine": "x86_64",
+    "cpus": [
+      {
+        "model": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "speed": 3593,
+        "user": 3122000,
+        "nice": 0,
+        "sys": 1371437,
+        "idle": 26489984,
+        "irq": 292812
+      },
+      {
+        "model": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "speed": 3593,
+        "user": 2065281,
+        "nice": 0,
+        "sys": 775312,
+        "idle": 28142828,
+        "irq": 16953
+      },
+      {
+        "model": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "speed": 3593,
+        "user": 1151484,
+        "nice": 0,
+        "sys": 340062,
+        "idle": 29491875,
+        "irq": 12765
+      },
+      {
+        "model": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "speed": 3593,
+        "user": 627125,
+        "nice": 0,
+        "sys": 144515,
+        "idle": 30211781,
+        "irq": 11437
+      },
+      {
+        "model": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "speed": 3593,
+        "user": 3618203,
+        "nice": 0,
+        "sys": 625031,
+        "idle": 26740062,
+        "irq": 13531
+      },
+      {
+        "model": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "speed": 3593,
+        "user": 1522734,
+        "nice": 0,
+        "sys": 307562,
+        "idle": 29153000,
+        "irq": 15312
+      },
+      {
+        "model": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "speed": 3593,
+        "user": 399359,
+        "nice": 0,
+        "sys": 118359,
+        "idle": 30465562,
+        "irq": 12078
+      },
+      {
+        "model": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "speed": 3593,
+        "user": 251125,
+        "nice": 0,
+        "sys": 82406,
+        "idle": 30649750,
+        "irq": 11843
+      },
+      {
+        "model": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "speed": 3593,
+        "user": 113656,
+        "nice": 0,
+        "sys": 26843,
+        "idle": 30842796,
+        "irq": 1984
+      },
+      {
+        "model": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "speed": 3593,
+        "user": 57093,
+        "nice": 0,
+        "sys": 17781,
+        "idle": 30908406,
+        "irq": 1609
+      },
+      {
+        "model": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "speed": 3593,
+        "user": 17437,
+        "nice": 0,
+        "sys": 16437,
+        "idle": 30949406,
+        "irq": 1109
+      },
+      {
+        "model": "AMD Ryzen 5 3600 6-Core Processor              ",
+        "speed": 3593,
+        "user": 9625,
+        "nice": 0,
+        "sys": 47031,
+        "idle": 30926625,
+        "irq": 32656
+      }
+    ],
+    "networkInterfaces": [
+   
