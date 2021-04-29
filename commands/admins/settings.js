@@ -14,7 +14,7 @@ module.exports = {
             Active: true
         }) // Database
 
-        const entries = Object.entries(data.LogsChannels) // Finding the object from database
+        const entries = Object.entries(data.LogChannels) // Finding the object from database
         const ErrorsEmbed = new MessageEmbed() // New message Embed if any error occures
 
         const Embed = new MessageEmbed() // Message embed
@@ -22,27 +22,29 @@ module.exports = {
         .setFooter(`settings [field name] to change the settings`)
         .setColor(message.guild.me.displayColor)
 
+        Embed.addField("Prefix", data.prefix)
+
+        const channelArr = new Array(); // Array of Moderator roles
+        for (const [logChannel, channelID] of entries) {
+            let objectLogChannels = message.guild.channels.cache.find(c => c.id == channelID)
+            channelArr.push(`**${logChannel}** -      ${objectLogChannels ? objectLogChannels : 'NONE'}`)
+            
+        }
         const adminRoleArr = []
-        data.AdminRole.forEach(rolesID =>{
+        data.Admin.forEach(rolesID =>{
             let searchForAdmin = message.guild.roles.cache.find(r => r.id == rolesID)
             adminRoleArr.push(searchForAdmin.toString())
         })
         const modRoleArr = []
-        data.ModRole.forEach(rolesID =>{
+        data.Moderator.forEach(rolesID =>{
             let searchForMod = message.guild.roles.cache.find(r => r.id == rolesID)
             modRoleArr.push(searchForMod.toString())
         })          
         
-        Embed.addField(`Admins`, adminRoleArr.length ? `${adminRoleArr.join(',')}` : 'NONE')
-        Embed.addField(`Moderators`, modRoleArr.length ? `${modRoleArr.join(',')}` : 'NONE')
-
-    
-        const channelArr = new Array(); // Array of Moderator roles
-        for (const [logChannel, channelID] of entries) {
-            let objectLogChannels = message.guild.channels.cache.find(c => c.id == channelID)
-            channelArr.push(`**${logChannel}** - ${objectLogChannels ? objectLogChannels : 'NONE'}`)
-        }
-        Embed.addField("Log Channels", `${channelArr.join(',\n')}`)
+        Embed.addField("LOG CHANNELS",`${channelArr.join(',\n')}`)
+        Embed.addField(`Admin`, adminRoleArr.length ? `${adminRoleArr.join(',')}` : 'NONE')
+        Embed.addField(`Moderator`, modRoleArr.length ? `${modRoleArr.join(',')}` : 'NONE')
+        
 
         if(!args.length){
             message.channel.send(Embed) // IF [2]nd argument is missing, send flat embed
@@ -61,9 +63,7 @@ module.exports = {
                 upsert: true
             })
 
-            await message.channel.send({embed: new MessageEmbed()
-                .setDescription(`${key} set to ${value}`)
-            })
+            await message.channel.send(`${logChannels} Updated`,Embed)
             // Flat funtion fo Prefix
         }
 
@@ -85,16 +85,14 @@ module.exports = {
                     guildID: message.guild.id,
                     guildName: message.guild.name,
                     $set: {
-                        [`LogsChannels.${key}`]: logChannels.id,
-                        [`EnableDisable.${key}`]: true
+                        [`LogChannels.${key}`]: logChannels.id,
+                        [`Module.${key}`]: true
                     }
                 },{
                     upsert: true
                 })
 
-                await message.channel.send({embed: new MessageEmbed()
-                    .setDescription(`${logChannels} set for ${key}`)
-                })
+                await message.channel.send(`${logChannels} Updated`,Embed)
             }
             // Fucntion for log channels
         }
@@ -143,79 +141,79 @@ module.exports = {
                     
                 break;
                 
-            case 'mod-roles':
+            case 'moderator':
                 let valueOfMod = message.content.split(" ").slice(2).join(" ")
                 let modRoleValue = valueOfMod.split(/,\s+/)
 
-                rolesOption(modRoleValue, 'ModRole')
+                rolesOption(modRoleValue, 'Moderator')
                 
                 await message.channel.send(Embed)
                 break;
 
-            case 'admin-roles':
+            case 'admin':
                 let valueOfAdmin = message.content.split(" ").slice(2).join(" ")
                 let adminRoleValue = valueOfAdmin.split(/,\s+/)
 
-                rolesOption(adminRoleValue, 'AdminRole')
+                rolesOption(adminRoleValue, 'Admin')
 
                 await message.channel.send(Embed)
                 break;
 
-            case 'message-logs':
+            case 'messagelog':
 
-                channelOptions(logChannelsOfConfig, 'messageLogs' )
+                channelOptions(logChannelsOfConfig, 'MessageLog' )
                 break;
 
-            case 'action-logs':
+            case 'infractionlog':
 
-                channelOptions(logChannelsOfConfig, 'infractionLogs' )
+                channelOptions(logChannelsOfConfig, 'InfractionLog' )
                 break;
-            case 'join-logs':
+            case 'memberjoin':
 
-                channelOptions(logChannelsOfConfig, 'joinLogs' )
+                channelOptions(logChannelsOfConfig, 'MemberJoin' )
                 break;
-            case 'leave-logs':
+            case 'memberleft':
 
-                channelOptions(logChannelsOfConfig, 'leaveLogs' )
-                break;
-
-            case 'command-logs':
-
-                channelOptions(logChannelsOfConfig, 'commandLogs' )
+                channelOptions(logChannelsOfConfig, 'MemberLeft' )
                 break;
 
-            case 'voice-logs':
+            case 'rolelog':
 
-                channelOptions(logChannelsOfConfig, 'voiceLogs' )
+                channelOptions(logChannelsOfConfig, 'RoleLog' )
                 break;
 
-            case 'user-logs':
+            case 'voicelog':
 
-                channelOptions(logChannelsOfConfig, 'userLogs' )
+                channelOptions(logChannelsOfConfig, 'VoiceLog' )
                 break;
 
-            case 'channel-logs':
+            case 'memberlog':
 
-                channelOptions(logChannelsOfConfig, 'channelsLogs' )
+                channelOptions(logChannelsOfConfig, 'MemberLog' )
                 break;
 
-            case 'server-logs':
+            case 'channelslog':
 
-                channelOptions(logChannelsOfConfig, 'serverUpdateLogs' )
-                break;
-            case 'mod-logs':
-
-                channelOptions(logChannelsOfConfig, 'moderationLogs' )
+                channelOptions(logChannelsOfConfig, 'ChannelsLog' )
                 break;
 
-            case 'admin-logs':
+            case 'serverlog':
 
-                channelOptions(logChannelsOfConfig, 'administrativeLogs' )
+                channelOptions(logChannelsOfConfig, 'ServerLog' )
+                break;
+            case 'moderationlog':
+
+                channelOptions(logChannelsOfConfig, 'ModerationLog' )
                 break;
 
-            case 'welcome-channel':
+            case 'adminlog':
 
-                channelOptions(logChannelsOfConfig, 'welcomeChannel' )
+                channelOptions(logChannelsOfConfig, 'adminlog' )
+                break;
+
+            case 'announcementchannel':
+
+                channelOptions(logChannelsOfConfig, 'AnnouncementChannel' )
                 break;
         }
 

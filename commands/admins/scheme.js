@@ -1,47 +1,38 @@
 const { customCommand } = require('../../models')
-const { MessageCollector, MessageEmbed } = require('discord.js');
+const { MessageCollector, MessageEmbed, Message } = require('discord.js');
 const { set } = require('mongoose');
 module.exports = {
     name: 'scheme',
 
     run: async(client, message, args,prefix) =>{
-        message.channel.send('started...')
-
-        const filter = async (m) => {
-            return m.content.toLowerCase() && m.author.id == message.author.id
-        };
-        const collector = message.channel.createMessageCollector(filter, {max: 1});
-
-        function object(data){
-            obj = {
-                key: data
-            }
+        const filterOne = m=> {
+            console.log(m.author.id, message.author.id)
+            return m.author.id == message.author.id
         }
-        const Embed = new MessageEmbed()
-
-        function variables(Array) {
-            return Array
-            .toString().replace("{author}", '${message.author}')
-            .toString().replace("{author.id}", '${message.author.id}')
-            .toString().replace("{author.tag}", '${message.author.tag}')
-            .toString().replace("{author.name}", '${message.author.username}')
-            .toString().replace("{user}", '${member.user}')
-            .toString().replace("{user.id}", '${member.user.id}')
-            .toString().replace("{user.tag}", '${member.user.tag}')
-            .toString().replace("{user.name}", '${member.user.username}')
-            .toString().replace("{channel}", '${message.channel}')
-            .toString().replace("{channel.name}", '${message.channel.name}')
-            .toString().replace("{channel.id}", '${message.channel.id}')
-            .toString().replace("{server}", '${message.guild.name}')
-            .toString().replace("{server.id}", '${message.guild.id')
-            .toString().replace(/^\s+|\s+$/g,'')
+        const filterTwo = m =>{
+            return m.author.id == message.author.id
         }
-        collector.on('collect', async(collected) =>{
-            await Embed.addField('KEY', collected.content)
-            object(collected.content)
-            console.log(obj)
-            message.channel.send(Embed)
+        
+        message.channel.send('What will be the key?').then(() => {
+          message.channel.awaitMessages(filterOne, {max: 1, time: 50000, errors: ['time']})
+          .then(collected => {
+        
+            message.channel.send(`the key is ${collected.content}`).then(() => {
+          message.channel.awaitMessages(filterTwo, {max: 1, time: 50000, errors: ['time']})
+        
+          .then(collected => {
+           message.channel.send(`the content is ${collected.content}`)
+           })
+           .catch(collected => {
+           message.channel.send('Error 2')
+           })
         })
+        
+           }).catch(collected => {
+            message.channel.send('Error')
+           })
+        })
+
 
     }
 }
