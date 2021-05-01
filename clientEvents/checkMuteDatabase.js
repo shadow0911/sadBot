@@ -5,6 +5,7 @@ const { Guild } = require('../models');
 
 module.exports = (client, message) =>{
     const checkMute = async () =>{
+        console.log("checking")
         const now = new Date()
         const conditional = {
             expire: {
@@ -76,7 +77,7 @@ module.exports = (client, message) =>{
             })
             if(logChannel.LogChannels.InfractionLog){
                 try{
-                    guild.channels.cache.get(logChannel.actionLogChannel).send({embed: unMuteEmbed})
+                    guild.channels.cache.get(logChannel.LogChannels.InfractionLog).send({embed: unMuteEmbed})
                 }catch(err){
                     console.log(err)
                 }
