@@ -71,11 +71,18 @@ module.exports = (client, message) =>{
             }
 
             let logChannel = await Guild.findOne({
-                guildID: guildID
+                guildID: guildID,
+                Active: true
             })
-            if(!logChannel) return false
-
-            guild.channels.cache.get(logChannel.actionLogChannel).send({embed: unMuteEmbed})
+            if(logChannel.LogChannels.InfractionLog){
+                try{
+                    guild.channels.cache.get(logChannel.actionLogChannel).send({embed: unMuteEmbed})
+                }catch(err){
+                    console.log(err)
+                }
+            }else {
+                return
+            }
            }
         }
 
@@ -117,24 +124,21 @@ module.exports = (client, message) =>{
             if(muteRole){
                 member.roles.add(muteRole.id)
 
-                        await new MuteDataBase({
-            caseID: makeid(),
-            Action: 'Mute',
-            guildID: guild.id,
-            guildName: guild.name,
-            userName: member.user.tag,
-            userID: member.id,
-            Reason: "SadBot manual mute",
-            Moderator: client.user.tag,
-            Date: date
-        }).save()
+            await new MuteDataBase({
+                caseID: makeid(),
+                Action: 'Mute',
+                guildID: guild.id,
+                guildName: guild.name,
+                userName: member.user.tag,
+                userID: member.id,
+                Reason: "SadBot manual mute",
+                Moderator: client.user.tag,
+                Date: date
+            }).save()
 
-        let logChannel = await Guild.findOne({
+        const logChannel = await Guild.findOne({
             guildID: guild.id,
-            Active: true,
-            LogChannels: {
-                InfractionLog
-            }
+            Active: true
         })
 
         let logEmbed = {
@@ -170,17 +174,21 @@ module.exports = (client, message) =>{
             }
 
         }
-
-        if(!logChannel){
-            return
-        }else {
-            try {
+        if(logChannel.LogChannels.InfractionLog){
+            try{
                 guild.channels.cache.get(logChannel.LogChannels.InfractionLog).send({embed: logEmbed})
             }catch(err){
                 console.log(err)
             }
-        } 
+        }else {
+            return
         }
+
+        
+            }else {
+                return console.log(`${guild} don't have muted role`)
+            }
         }
+
     })
 }

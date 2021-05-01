@@ -138,7 +138,7 @@ module.exports = {
             Active: true,
         })
 
-        if(!logChannel){
+        if(!logChannel.LogChannels.InfractionLog){
             return
         }else {
             try {
