@@ -130,9 +130,12 @@ module.exports = (client, message) =>{
         }).save()
 
         let logChannel = await Guild.findOne({
-            guildID: guild.id
+            guildID: guild.id,
+            Active: true,
+            LogChannels: {
+                InfractionLog
+            }
         })
-        if(!logChannel) return false
 
         let logEmbed = {
             color: "#fc5947",
@@ -168,11 +171,16 @@ module.exports = (client, message) =>{
 
         }
 
-        guild.channels.cache.get(logChannel.actionLogChannel).send({embed: logEmbed})
-            }else {
-                return console.log(`${guild} don't have muted role`)
+        if(!logChannel){
+            return
+        }else {
+            try {
+                guild.channels.cache.get(logChannel.LogChannels.InfractionLog).send({embed: logEmbed})
+            }catch(err){
+                console.log(err)
             }
+        } 
         }
-
+        }
     })
 }

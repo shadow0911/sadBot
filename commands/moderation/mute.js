@@ -134,20 +134,27 @@ module.exports = {
         muteLog.save().catch(err => console.log(err))
 
         let logChannel = await Guild.findOne({
-            guildID: message.guild.id
+            guildID: message.guild.id,
+            Active: true,
         })
 
-        if(!logChannel) return false
-
-        message.guild.channels.cache.get(logChannel.actionLogChannel).send({embed: new Discord.MessageEmbed()
-            .setAuthor('A MUTE HAS BEEN DETECTED')
-            .addField('User', `\`\`\`${muteMember.user.tag}\`\`\``, true)
-            .addField('Moderator', `\`\`\`${message.author.tag}\`\`\``, true)
-            .addField('Time', `\`\`\`${ms(ms(time))}\`\`\``, true)
-            .addField('Reason', `\`\`\`${muteReason}\`\`\``)
-            .setFooter(`${muteMember.id}`)
-            .setTimestamp()
-            .setColor("#fc5947")
-        }) 
+        if(!logChannel){
+            return
+        }else {
+            try {
+                message.guild.channels.cache.get(logChannel.LogChannels.InfractionLog ? logChannel.LogChannels.InfractionLog : null).send({embed: new Discord.MessageEmbed()
+                    .setAuthor('A MUTE HAS BEEN DETECTED')
+                    .addField('User', `\`\`\`${muteMember.user.tag}\`\`\``, true)
+                    .addField('Moderator', `\`\`\`${message.author.tag}\`\`\``, true)
+                    .addField('Time', `\`\`\`${ms(ms(time))}\`\`\``, true)
+                    .addField('Reason', `\`\`\`${muteReason}\`\`\``)
+                    .setFooter(`${muteMember.id}`)
+                    .setTimestamp()
+                    .setColor("#fc5947")
+                })
+            }catch(err){
+                console.log(err)
+            }
+        } 
     }
 }
