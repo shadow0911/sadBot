@@ -5,7 +5,6 @@ const { Guild } = require('../models');
 
 module.exports = (client, message) =>{
     const checkMute = async () =>{
-        console.log("checking")
         const now = new Date()
         const conditional = {
             expire: {
@@ -87,7 +86,7 @@ module.exports = (client, message) =>{
            }
         }
 
-        setTimeout(checkMute, 1000)
+        setInterval(checkMute, 1000)
         
 
         await MuteDataBase.updateMany(conditional,{
@@ -184,8 +183,6 @@ module.exports = (client, message) =>{
         }else {
             return
         }
-
-        
             }else {
                 return console.log(`${guild} don't have muted role`)
             }

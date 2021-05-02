@@ -40,7 +40,7 @@ module.exports = (client, message) =>{
             Active: true
         })
 
-        if(welcomeChannel.AnnouncementChannel){
+        if(welcomeChannel.LogChannels.AnnouncementChannel){
             guild.channels.cache.get(welcomeChannel.AnnouncementChannel).send({embed: new Discord.MessageEmbed()
                 .setAuthor(`${member.user.tag} - ${guild.memberCount.toLocaleString()}` , `${member.user.avatarURL({
                     dynamic: true, 
