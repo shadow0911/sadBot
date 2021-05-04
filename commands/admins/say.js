@@ -59,9 +59,7 @@ module.exports = {
 
         const valueMessage = args.slice(1).join(' ');
         const regularMsg = args.slice(0).join(' ');
-        console.log(valueMessage)
        
-
         const cmd = message.content.split(" ")[1]
         console.log(cmd)
         const channel = message.guild.channels.cache.find(c => c.id == cmd.replace('<#','').replace('>',''))

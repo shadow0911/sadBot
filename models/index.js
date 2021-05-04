@@ -5,4 +5,6 @@ module.exports = {
     customCommand: require('./customCmdsSchema'),
     Profiles: require('./profiles'),
     ModProfile: require('./ModeratorProfile'),
+    GuildRole: require('./GuildRoles'),
+    GuildChannel: require('./GuildChannels')
 };

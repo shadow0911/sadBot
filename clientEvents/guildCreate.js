@@ -1,4 +1,4 @@
-const { Guild } = require('../models')
+const { Guild, GuildRole, GuildChannel } = require('../models')
 const { default_prefix } = require('../config.json')
 module.exports = async client =>{
     
@@ -10,6 +10,8 @@ module.exports = async client =>{
                 Active: true
             }
             const Data = await Guild.findOne(conditional)
+            const Channels = await GuildRole.findOne(conditional),
+            const Roles = await GuildChannel.findOne(conditional)
         
             if(!Data){
                 new Guild({
@@ -18,42 +20,18 @@ module.exports = async client =>{
                     Active: true,
                     prefix: default_prefix,
                     ownerID: guild.ownerID,
-                    MutedRole: "Muted",
-                    LogChannels: {
-                        MessageLog: "",
-                        InfractionLog: "",
-                        MemberJoin: "",
-                        MemberLeft: "",
-                        RoleLog: "",
-                        VoiceLog: "",
-                        MemberLog: "",
-                        ChannelsLog: "",
-                        ServerLog: "",
-                        ModerationLog: "",
-                        AdminLog: "",
-                        AnnouncementChannel: "",
-                    },
-                    IgnoreChannels: [],
-                    IgnoreRoles: [],
-                    BotMaster: [],
-                    Moderator: [],
-                    Admin: [],
-                    WelcomeMessage: "",
-                    Module: {
-                        MessageLog: false,
-                        InfractionLog: false,
-                        MemberJoin: false,
-                        MemberLeft: false,
-                        RoleLog: false,
-                        VoiceLog: false,
-                        MemberLog: false,
-                        ChannelsLog: false,
-                        ServerLog: false,
-                        ModerationLog: false,
-                        AdminLog: false,
-                        AnnouncementChannel: false,
-                    }
                 }).save()
+            }
+            if(!Channels){
+              new GuildChannel({
+                    guildID: guild.id,
+                    guildName: guild.name,
+                    Active: true,
+                    LogChannels: {
+                      MessageLog: null,
+                      ActionLog: null,
+                    }
+              })
             }
             setTimeout(newGuild, 10000)
         }

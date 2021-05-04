@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const mongoPath  = process.env.MONGOPATH
+const mongoPath = process.env.mongoPath
 
 module.exports = {
   init: () => {

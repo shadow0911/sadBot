@@ -42,185 +42,128 @@ module.exports = {
             timestamp: new Date()
         }
 
-        const Settings = await Guild.findOne({
-            guildID: message.guild.id,
-            Active: true
+        let Settings = await Guild.findOne({
+            guildID: message.guild.id
         })
+
+        const { ModAction } = Settings
+
+        const amount = !!parseInt(message.content.split(' ')[1]) ? parseInt(message.content.split(' ')[1]) : parseInt(message.content.split(' ')[2])
         
-        async function purgeMessage(amount, individual, MessageToPurge){
-            const Embed = new Discord.MessageEmbed()
-                .addField('Message Amount', `\`\`\`${amount}\`\`\``, true)
-                .addField('Moderator', `\`\`\`${message.author.tag}\`\`\``, true)
-                .setColor("#f2f4f7")
-                .setTimestamp()
-            switch(individual){
-                case 'bots':
-                    await message.channel.messages.fetch({limit: 100}).then(messages =>{
-                        messages = messages.filter(m => m.author.bot && !m.pinned).array().slice(0, amount ? amount : 100)
-                        message.channel.bulkDelete(messages)
-
-                        Embed.setAuthor("Bots message deletion")
-                        if(Settings.LogChannels.ModerationLog){
-                            message.guild.channels.cache.get(Settings.LogChannels.ModerationLog).send({Embed})
-                        }else {
-                            return
-                        }
-                    }).catch((err) => console.log(err))
-                    break;
-                
-                case 'humans':
-                    await message.channel.messages.fetch({limit: 100}).then(messages =>{
-                        messages = messages.filter(m => !m.author.bot && !m.pinned).array().slice(0, amount ? amount : 100)
-                        message.channel.bulkDelete(messages)
-
-                        Embed.setAuthor("Humans message deletion")
-                        if(Settings.LogChannels.ModerationLog){
-                            message.guild.channels.cache.get(Settings.LogChannels.ModerationLog).send({Embed})
-                        }else {
-                            return
-                        }
-                    }).catch((err) => console.log(err))
-                    break;
-                    
-                case 'startsWith':
-                    await message.channel.messages.fetch({limit: 100}).then(messages =>{
-                        messages = messages.filter(m => !m.pinned && m.content.startsWith(MessageToPurge)).array().slice(0, amount ? amount : 100)
-                        message.channel.bulkDelete(messages)
-
-                        Embed.setAuthor("Starts-with message deletion")
-                        Embed.addField("Starts-with", `\`\`\`${MessageToPurge}\`\`\``, true)
-                        if(Settings.LogChannels.ModerationLog){
-                            message.guild.channels.cache.get(Settings.LogChannels.ModerationLog).send({Embed})
-                        }else {
-                            return
-                        }
-                    }).catch((err) => console.log(err))
-                    break;
-
-                case 'endsWith':
-                    await message.channel.messages.fetch({limit: 100}).then(messages =>{
-                        messages = messages.filter(m => !m.pinned && m.content.endsWith(MessageToPurge)).array().slice(0, amount ? amount : 100)
-                        message.channel.bulkDelete(messages)
-
-                        Embed.setAuthor("Ends-with message deletion")
-                        Embed.addField("Ends-with", `\`\`\`${MessageToPurge}\`\`\``, true)
-                        if(Settings.LogChannels.ModerationLog){
-                            message.guild.channels.cache.get(Settings.LogChannels.ModerationLog).send({Embed})
-                        }else {
-                            return
-                        }
-                    }).catch((err) => console.log(err))
-                    break;
-
-                case 'matchedWord':
-                    await message.channel.messages.fetch({limit: 100}).then(messages =>{
-                        messages = messages.filter(m => !m.pinned && m.content.includes(MessageToPurge)).array().slice(0, amount ? amount : 100)
-                        message.channel.bulkDelete(messages)
-
-                        
-                        Embed.setAuthor("Match message deletion")
-                        Embed.addField("Matched word", `\`\`\`${MessageToPurge}\`\`\``, true)
-                        if(Settings.LogChannels.ModerationLog){
-                            message.guild.channels.cache.get(Settings.LogChannels.ModerationLog).send({Embed})
-                        }else {
-                            return
-                        }
-                    }).catch((err) => console.log(err))
-                    break;
-
-                case 'notIncludes':
-                    await message.channel.messages.fetch({limit: 100}).then(messages =>{
-                        messages = messages.filter(m => !m.pinned && !m.content.includes(MessageToPurge)).array().slice(0, amount ? amount : 100)
-                        message.channel.bulkDelete(messages)
-
-                        Embed.setAuthor("Doesn't match message deletion")
-                        Embed.addField("Doesn't Match", `\`\`\`${MessageToPurge}\`\`\``, true)
-                        if(Settings.LogChannels.ModerationLog){
-                            message.guild.channels.cache.get(Settings.LogChannels.ModerationLog).send({Embed})
-                        }else {
-                            return
-                        }
-                    }).catch((err) => console.log(err))
-                    break;
-
-                case 'pinnedMessage':
-                    case 'notIncludes':
-                        await message.channel.messages.fetch({limit: 100}).then(messages =>{
-                            messages = messages.filter(m => m.pinned).array().slice(0, amount ? amount : 100)
-                            message.channel.bulkDelete(messages)
-
-                            Embed.setAuthor("Pinned message deletion")
-                            if(Settings.LogChannels.ModerationLog){
-                                message.guild.channels.cache.get(Settings.LogChannels.ModerationLog).send({Embed})
-                            }else {
-                                return
+        
+        switch(cmd){
+            case "bot":{
+                message.channel.messages.fetch({
+                    limit: 100,
+                }).then(async messages => {
+                    messages = messages.filter(m => m.author.bot && !m.pinned).array().slice(0, amount ? amount : 100);
+                    await message.channel.bulkDelete(messages).then(async () =>{
+                        await message.guild.channels.cache.get(ModAction).send({embed: new Discord.MessageEmbed()
+                            .setAuthor('Cleaned meesages send by BOTS',`${message.author.avatarURL({
+                                dynamic: true , format: 'png', size: 1024
                             }
-                        }).catch((err) => console.log(err))
-                    break;
-            }
-        }
-
-        const amount = !!parseInt(message.content.split(' ')[2]) ? parseInt(message.content.split(' ')[2]) : parseInt(message.content.split(' ')[3])
-        const solidMessage = parseInt(message.content.split(' ')[1])
-
-        if(amount >= 101){
-            return message.channel.send("i can't delete more than 100")
-        }else if(solidMessage >= 101){
-            return message.channel.send("i can't delete more than 100")
-        }
-
-        switch(cmd) {
-            case 'match':
-                let matchMessage = args[1]
-                purgeMessage(amount, 'matchedWord', matchMessage)
-                break;
-
-            case 'bots':
-                purgeMessage(amount, 'bots')
-                break;
-
-            case 'humans':
-                purgeMessage(amount, 'humans')
-                break;
-
-            case 'starts':
-                let startsMsg = args[1]
-                purgeMessage(amount, 'startsWith', startsMsg)
-                break;
-
-            case 'ends':
-                let endsMsg = args[1]
-                purgeMessage(amount, 'endsWith', endsMsg)
-                break;
-
-            case 'nope':
-                let notIncludesMsg = args[1]
-                purgeMessage(amount, 'notIncludes', notIncludesMsg)
-                break;
-
-            case 'pinned':
-                purgeMessage(amount, 'pinnedMessage')
-                break;
-
-            case `${solidMessage}`:
-                await message.channel.messages.fetch({limit: 100}).then(messages =>{
-                    messages = messages.filter(m => !m.pinned).array().slice(0, solidMessage ? solidMessage : 100)
-                    message.channel.bulkDelete(messages)
-
-                    if(Settings.LogChannels.ModerationLog){
-                        message.guild.channels.cache.get(Settings.LogChannels.ModerationLog).send({embed: new Discord.MessageEmbed()
-                            .setAuthor("Message deletion")
-                            .addField("Amount", `\`\`\`${solidMessage}\`\`\``, true)
-                            .addField("Moderator", `\`\`\`${message.author.tag}\`\`\``, true)
+                            )}`)
+                            .addField('Moderator', `\`\`\`${message.author.tag}\`\`\``, true)
+                            .addField('Message Amount', `\`\`\`${amount ? amount : "100"}\`\`\``, true)
+                            .addField('Channel', `${message.channel}`, true)
                             .setTimestamp()
-                            .setColor("#f2f4f7")
+                            .setColor(message.guild.me.displayColor)
                         })
-                    }else {
-                        return
-                    }
-                }).catch((err) => console.log(err))
+                    })
+                })
+            }
             break;
 
+            case "human":{
+                message.channel.messages.fetch({
+                    limit: 100,
+                }).then(async messages => {
+                    messages = messages.filter(m => !m.author.bot && !m.pinned).array().slice(0, amount ? amount : 100);
+                    await message.channel.bulkDelete(messages).then(async () =>{
+                        await message.guild.channels.cache.get(ModAction).send({embed: new Discord.MessageEmbed()
+                            .setAuthor('Cleaned meesages send by HUMANS',`${message.author.avatarURL({
+                                dynamic: true , format: 'png', size: 1024
+                            }
+                            )}`)
+                            .addField('Moderator', `\`\`\`${message.author.tag}\`\`\``, true)
+                            .addField('Message Amount', `\`\`\`${amount ? amount : "100"}\`\`\``, true)
+                            .addField('Channel', `${message.channel}`, true)
+                            .setTimestamp()
+                            .setColor(message.guild.me.displayColor)
+                        })
+                    })
+                })
+            }
+            break;
+
+            case "pinned":{
+                message.channel.messages.fetch({
+                    limit: 100,
+                }).then(async messages => {
+                    messages = messages.filter(m => m.pinned).array().slice(0, amount ? amount : 100);
+                    await message.channel.bulkDelete(messages).then(async () =>{
+                        await message.guild.channels.cache.get(ModAction).send({embed: new Discord.MessageEmbed()
+                            .setAuthor('Cleaned meesages send by BOTS',`${message.author.avatarURL({
+                                dynamic: true , format: 'png', size: 1024
+                            }
+                            )}`)
+                            .addField('Moderator', `\`\`\`${message.author.tag}\`\`\``, true)
+                            .addField('Message Amount', `\`\`\`${amount ? amount : "?"}\`\`\``, true)
+                            .addField('Channel', `${message.channel}`, true)
+                            .setTimestamp()
+                            .setColor(message.guild.me.displayColor)
+                        })
+                    })
+                })
+            }
+            break;
+
+            case `${amount}`: {
+                if(amount >= 101) return message.channel.send({embed: new Discord.MessageEmbed()
+                    .setDescription('I Can\'t clean more than 100 message at once 😢')
+                    .setColor('#FF0000')
+                }).then(m =>m.delete ({timeout: 5000}))
+        
+                await message.channel.messages.fetch().then(messages =>{
+                    messages = messages.filter(m => !m.pinned).array().slice(0, amount ? amount : 100)
+                    message.channel.bulkDelete(messages).then(async () =>{
+        
+                    })
+                }).catch((err) => console.log(err))
+        
+                const status = await Status.findOne({
+                    userID: message.author.id,
+                    guildID: message.guild.id
+                })
+            }
+            break;
+
+            case 'help': {
+                message.channel.send({embed: Embed})
+            }
         }
+        const status = Status.findOne({
+            userID: message.author.id,
+            guildID: message.guild.id
+        })
+
+        const modData = await ModProfile.findOneAndUpdate({
+            userID: message.author.id,
+            guildID: message.guild.id
+        },{
+            userID: message.author.id,
+            guildID: message.guild.id,
+            guildName: message.guild.name,
+            userName: message.author.tag,
+            Status: status.Enabled ? status.Enabled : false,
+            $inc:{
+                Clean: amount ? amount : 100,
+                Command: 1
+            }
+        },{
+            upsert: true,
+            new: false
+        })
+
     }
 }

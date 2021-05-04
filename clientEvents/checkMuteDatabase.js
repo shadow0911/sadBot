@@ -86,7 +86,7 @@ module.exports = (client, message) =>{
            }
         }
 
-        setInterval(checkMute, 1000)
+        setTimeout(checkMute, 1000)
         
 
         await MuteDataBase.updateMany(conditional,{
@@ -124,21 +124,24 @@ module.exports = (client, message) =>{
             if(muteRole){
                 member.roles.add(muteRole.id)
 
-            await new MuteDataBase({
-                caseID: makeid(),
-                Action: 'Mute',
-                guildID: guild.id,
-                guildName: guild.name,
-                userName: member.user.tag,
-                userID: member.id,
-                Reason: "SadBot manual mute",
-                Moderator: client.user.tag,
-                Date: date
-            }).save()
-
-        const logChannel = await Guild.findOne({
+                        await new MuteDataBase({
+            caseID: makeid(),
+            Action: 'Mute',
             guildID: guild.id,
-            Active: true
+            guildName: guild.name,
+            userName: member.user.tag,
+            userID: member.id,
+            Reason: "SadBot manual mute",
+            Moderator: client.user.tag,
+            Date: date
+        }).save()
+
+        let logChannel = await Guild.findOne({
+            guildID: guild.id,
+            Active: true,
+            LogChannels: {
+                InfractionLog
+            }
         })
 
         let logEmbed = {
@@ -174,19 +177,17 @@ module.exports = (client, message) =>{
             }
 
         }
-        if(logChannel.LogChannels.InfractionLog){
-            try{
+
+        if(!logChannel){
+            return
+        }else {
+            try {
                 guild.channels.cache.get(logChannel.LogChannels.InfractionLog).send({embed: logEmbed})
             }catch(err){
                 console.log(err)
             }
-        }else {
-            return
+        } 
         }
-            }else {
-                return console.log(`${guild} don't have muted role`)
-            }
         }
-
     })
 }
